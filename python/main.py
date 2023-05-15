@@ -43,7 +43,7 @@ def train_mlp(X, Y, hiddenSize, alpha, batchSize, epochs):
 
 if __name__ == "__main__":
     
-    data = pd.read_csv(os.path.join(os.getcwd(), 'data', 'breast-cancer-processed.csv'))
+    data = pd.read_csv(os.path.join(os.getcwd(), 'data', 'heart-processed.csv'))
     # data = data.sample(frac=1)  # shuffle the data
 
     print(data.head())
@@ -57,9 +57,9 @@ if __name__ == "__main__":
 
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
-    hiddenSize = 5
+    hiddenSize = 10
     alpha = 0.001
-    batchSize = 10
+    batchSize = 5
     epochs = 1000
     
     W1, b1, W2, b2 = train_mlp(X_train, Y_train, hiddenSize, alpha, batchSize, epochs)
