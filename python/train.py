@@ -62,7 +62,7 @@ accuracy = predict(X, Y, W1, b1, W2, b2)
 print("Accuracy of the model on random data: "+str(accuracy))
 #------------------------------------------------------------------------------
 # Example usage on iris data set
-X, Y = load_data("../data/iris.data")
+X, Y = load_data("./data/iris.data")
 # Normalize the input features (optional but recommended)
 X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
 # Train

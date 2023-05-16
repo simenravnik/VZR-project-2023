@@ -78,3 +78,124 @@ void free_data_frame(DataFrame df) {
     }
     free(df.data);
 }
+
+double** allocate_matrix(int rows, int cols) {
+    double** mat = malloc(rows * sizeof(double*));
+    for (int i = 0; i < rows; i++) {
+        mat[i] = malloc(cols * sizeof(double));
+    }
+    return mat;
+}
+
+void free_matrix(double** mat, int rows) {
+    for (int i = 0; i < rows; i++) {
+        free(mat[i]);
+    }
+    free(mat);
+}
+
+double** random_matrix(int rows, int cols) {
+    double** mat = allocate_matrix(rows, cols);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            mat[i][j] = (double)rand() / RAND_MAX;
+        }
+    }
+    return mat;
+}
+
+double** ones_matrix(int rows, int cols) {
+    double** mat = allocate_matrix(rows, cols);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            mat[i][j] = 1.0;
+        }
+    }
+    return mat;
+}
+
+double** matrix_transpose(double** mat, int rows, int cols) {
+    double** mat_T = allocate_matrix(cols, rows);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            mat_T[j][i] = mat[i][j];
+        }
+    }
+    return mat_T;
+}
+
+double** matrix_multiply(double** mat1, double** mat2, int rows1, int cols1, int rows2, int cols2) {
+    double** result = allocate_matrix(rows1, cols2);
+    for (int i = 0; i < rows1; i++) {
+        for (int j = 0; j < cols2; j++) {
+            double sum = 0.0;
+            for (int k = 0; k < cols1; k++) {
+                sum += mat1[i][k] * mat2[k][j];
+            }
+            result[i][j] = sum;
+        }
+    }
+    return result;
+}
+
+double** matrix_multiply_scalar(double** mat, int rows, int cols, double scalar) {
+    double** result = allocate_matrix(rows, cols);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            result[i][j] = mat[i][j] * scalar;
+        }
+    }
+    return result;
+}
+
+double** matrix_hadamard(double** mat1, double** mat2, int rows, int cols) {
+    double** result = allocate_matrix(rows, cols);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            result[i][j] = mat1[i][j] * mat2[i][j];
+        }
+    }
+    return result;
+}
+
+double** matrix_squaring(double** mat, int rows, int cols) {
+    double** result = allocate_matrix(rows, cols);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            result[i][j] = pow(mat[i][j], 2);
+        }
+    }
+    return result;
+}
+
+double** matrix_add(double** mat, double** vec, int rows, int cols) {
+    double** result = (double**)malloc(rows * sizeof(double*));
+    for (int i = 0; i < rows; i++) {
+        result[i] = (double*)malloc(cols * sizeof(double));
+        for (int j = 0; j < cols; j++) {
+            result[i][j] = mat[i][j] + vec[0][j];
+        }
+    }
+    return result;
+}
+
+double** matrix_subtract(double** mat1, double** mat2, int rows, int cols) {
+    double** result = allocate_matrix(rows, cols);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            result[i][j] = mat1[i][j] - mat2[i][j];
+        }
+    }
+    return result;
+}
+
+double** matrix_tanh(double** mat, int rows, int cols) {
+    double** result = (double**)malloc(rows * sizeof(double*));
+    for (int i = 0; i < rows; i++) {
+        result[i] = (double*)malloc(cols * sizeof(double));
+        for (int j = 0; j < cols; j++) {
+            result[i][j] = tanh(mat[i][j]);
+        }
+    }
+    return result;
+}
