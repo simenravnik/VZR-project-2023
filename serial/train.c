@@ -24,12 +24,6 @@ MLP_model train_mlp(double** X, double** Y, int samples, int features, int outpu
     double** b1 = random_matrix(1, hiddenSize);
     double** b2 = random_matrix(1, outputs);
 
-    print_matrix(W1, features, hiddenSize);
-    print_matrix(W2, hiddenSize, outputs);
-    print_matrix(b1, 1, hiddenSize);
-    print_matrix(b2, 1, outputs);
-    fflush(stdout);
-
     // Train the model
     for (int epoch = 0; epoch < epochs; epoch++) {
         // TODO: fix to encapsulate the last batch if samples % batchSize != 0
@@ -97,12 +91,6 @@ int main(int argc, char** argv) {
     int classes = 3;
     split.Y_train = one_hot_encode(split.Y_train, trainSize, classes);
     split.Y_test = one_hot_encode(split.Y_test, testSize, classes);
-
-    print_matrix(split.X_train, trainSize, features);
-    print_matrix(split.Y_train, trainSize, classes);
-    print_matrix(split.X_test, testSize, features);
-    print_matrix(split.Y_test, testSize, classes);
-    fflush(stdout);
 
     int hiddenSize = 20;
     int batchSize = 10;
