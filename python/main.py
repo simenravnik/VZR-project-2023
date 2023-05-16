@@ -15,10 +15,8 @@ def train_mlp(X, Y, hiddenSize, alpha, batchSize, epochs):
     
     for epoch in range(epochs):
         for b in range(batches):
-            batch_rows = np.random.choice(samples, batchSize, replace=False)    # Get the row indices for the current batch
-            
-            X_b = X[batch_rows, :]                       # Input data for the current batch
-            Y_b = Y[batch_rows, :]                       # Target data for the current batch
+            X_b = X[b:b+batchSize]                       # Input data for the current batch
+            Y_b = Y[b:b+batchSize]                       # Target data for the current batch
             
             H = np.tanh(X_b.dot(W1) + b1)                # Compute the hidden layer activations
             Y_hat = np.tanh(H.dot(W2) + b2)              # Compute the network output
@@ -43,7 +41,7 @@ def train_mlp(X, Y, hiddenSize, alpha, batchSize, epochs):
 
 if __name__ == "__main__":
     
-    data = pd.read_csv(os.path.join(os.getcwd(), 'data', 'heart-processed.csv'))
+    data = pd.read_csv(os.path.join(os.getcwd(), 'data', 'iris.csv'))
     # data = data.sample(frac=1)  # shuffle the data
 
     print(data.head())

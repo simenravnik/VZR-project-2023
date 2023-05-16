@@ -1,2 +1,2 @@
-gcc -lm -o main main.c
-srun --reservation=fri main > ../results/main.txt
+gcc -lm -o train train.c
+srun --reservation=fri train > ../results/train.txt
