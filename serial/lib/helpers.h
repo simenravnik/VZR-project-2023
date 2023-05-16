@@ -1,8 +1,12 @@
+#ifndef HELPERS_H
+#define HELPERS_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include "read.h"
+#include "matrix.h"
 
 typedef struct TrainTestSplit {
     double** X_train;
@@ -19,11 +23,12 @@ typedef struct Data {
     double** Y;
 } Data;
 
-// Function declarations
 TrainTestSplit train_test_split(DataFrame df, int trainSize, int testSize);
 Data extract_data(DataFrame df);
 TrainTestSplit split(double** X, double** Y, int samples, int features, int trainSize, int testSize);
-
+double** normalize(double** X, int samples, int features);
+double** one_hot_encode(double** Y, int samples, int classes);
+double accuracy_score(double** y_true, double** y_pred, int rows, int cols);
 
 /**
  * Returns data splitted into train and test
@@ -150,3 +155,21 @@ double** one_hot_encode(double** Y, int samples, int classes) {
 
     return Y_encoded;
 }
+
+// Additional helper functions
+double accuracy_score(double** y_true, double** y_pred, int rows, int cols) {
+    double** y_true_argmax = argmax(y_true, rows, cols);
+    double** y_pred_argmax = argmax(y_pred, rows, cols);
+
+    double correct = 0;
+    for (int i = 0; i < rows; i++) {
+        if (y_true_argmax[i][0] == y_pred_argmax[i][0]) {
+            correct++;
+        }
+    }
+
+    return correct / rows;
+}
+
+
+#endif

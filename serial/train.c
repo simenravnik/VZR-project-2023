@@ -5,8 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "matrix.h"
-#include "train_test_split.h"
+#include "lib/read.h"
+#include "lib/matrix.h"
+#include "lib/helpers.h"
 
 typedef struct MLP_model {
     double** W1;

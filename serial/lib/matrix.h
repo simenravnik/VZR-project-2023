@@ -1,7 +1,27 @@
+#ifndef MATRIX_H
+#define MATRIX_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+double** allocate_matrix(int rows, int cols);
+void free_matrix(double** mat, int rows);
+double** random_matrix(int rows, int cols);
+void print_matrix(double** mat, int rows, int cols);
+double** slice_matrix(double** mat, int startRow, int endRow, int startCol, int endCol);
+double** dot(double** mat1, double** mat2, int rows1, int cols1, int rows2, int cols2);
+double** add(double** mat1, double** mat2, int rows, int cols);
+double** subtract(double** mat1, double** mat2, int rows, int cols);
+double** hadamard(double** mat1, double** mat2, int rows, int cols);
+double** transpose(double** mat, int rows, int cols);
+double** sum(double** mat, int rows, int cols);
+double** ones(int rows, int cols);
+double** square(double** mat, int rows, int cols);
+double** matrix_tanh(double** mat, int rows, int cols);
+double** scalar_multiply(double** mat, double scalar, int rows, int cols);
+double** argmax(double** mat, int rows, int cols);
 
 double** allocate_matrix(int rows, int cols) {
     double** mat = (double**) malloc(rows * sizeof(double*));
@@ -177,16 +197,5 @@ double** argmax(double** mat, int rows, int cols) {
     return result;
 }
 
-double accuracy_score(double** y_true, double** y_pred, int rows, int cols) {
-    double** y_true_argmax = argmax(y_true, rows, cols);
-    double** y_pred_argmax = argmax(y_pred, rows, cols);
 
-    double correct = 0;
-    for (int i = 0; i < rows; i++) {
-        if (y_true_argmax[i][0] == y_pred_argmax[i][0]) {
-            correct++;
-        }
-    }
-
-    return correct / rows;
-}
+#endif
