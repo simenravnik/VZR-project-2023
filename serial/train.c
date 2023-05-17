@@ -24,48 +24,50 @@ MLP_model train_mlp(double** X, double** Y, int samples, int features, int outpu
     double** b1 = random_matrix(1, hiddenSize);
     double** b2 = random_matrix(1, outputs);
 
+    double **Xb, **Yb, **H, **Y_hat, **E, **deltaOutput, **W2g, **b2g, **He, **W1g, **b1g;
+
     // Train the model
     for (int epoch = 0; epoch < epochs; epoch++) {
         // TODO: fix to encapsulate the last batch if samples % batchSize != 0
         for (int batch = 0; batch < samples; batch += batchSize) {
 
-            double** Xb = slice_matrix(X, batch, batch + batchSize, 0, features);   // batchSize x features
-            double** Yb = slice_matrix(Y, batch, batch + batchSize, 0, outputs);    // batchSize x outputs
+            Xb = slice_matrix(X, batch, batch + batchSize, 0, features);   // batchSize x features
+            Yb = slice_matrix(Y, batch, batch + batchSize, 0, outputs);    // batchSize x outputs
 
             // Forward pass
-            double** H = matrix_tanh(add(dot(Xb, W1, batchSize, features, features, hiddenSize), b1, batchSize, hiddenSize), batchSize, hiddenSize);   // batchSize x hiddenSize
-            double** Y_hat = matrix_tanh(add(dot(H, W2, batchSize, hiddenSize, hiddenSize, outputs), b2, batchSize, outputs), batchSize, outputs);    // batchSize x outputs
+            H = matrix_tanh(add(dot(Xb, W1, batchSize, features, features, hiddenSize), b1, batchSize, hiddenSize), batchSize, hiddenSize);   // batchSize x hiddenSize
+            Y_hat = matrix_tanh(add(dot(H, W2, batchSize, hiddenSize, hiddenSize, outputs), b2, batchSize, outputs), batchSize, outputs);    // batchSize x outputs
 
             // Backward pass
-            double** E = subtract(Y_hat, Yb, batchSize, outputs);    // batchSize x outputs
-            double** deltaOutput = hadamard(E, subtract(ones(batchSize, outputs), square(Y_hat, batchSize, outputs), batchSize, outputs), batchSize, outputs);   // batchSize x outputs
-            double** W2g = dot(transpose(H, batchSize, hiddenSize), deltaOutput, hiddenSize, batchSize, batchSize, outputs);    // hiddenSize x outputs
-            double** b2g = sum(deltaOutput, batchSize, outputs);    // 1 x outputs
-            double** He = dot(deltaOutput, transpose(W2, hiddenSize, outputs), batchSize, outputs, outputs, hiddenSize);    // batchSize x hiddenSize
+            E = subtract(Y_hat, Yb, batchSize, outputs);    // batchSize x outputs
+            deltaOutput = hadamard(E, subtract(ones(batchSize, outputs), square(Y_hat, batchSize, outputs), batchSize, outputs), batchSize, outputs);   // batchSize x outputs
+            W2g = dot(transpose(H, batchSize, hiddenSize), deltaOutput, hiddenSize, batchSize, batchSize, outputs);    // hiddenSize x outputs
+            b2g = sum(deltaOutput, batchSize, outputs);    // 1 x outputs
+            He = dot(deltaOutput, transpose(W2, hiddenSize, outputs), batchSize, outputs, outputs, hiddenSize);    // batchSize x hiddenSize
             He = hadamard(He, subtract(ones(batchSize, hiddenSize), square(H, batchSize, hiddenSize), batchSize, hiddenSize), batchSize, hiddenSize);    // batchSize x hiddenSize
-            double** W1g = dot(transpose(Xb, batchSize, features), He, features, batchSize, batchSize, hiddenSize);    // features x hiddenSize
-            double** b1g = sum(He, batchSize, hiddenSize);    // 1 x hiddenSize
+            W1g = dot(transpose(Xb, batchSize, features), He, features, batchSize, batchSize, hiddenSize);    // features x hiddenSize
+            b1g = sum(He, batchSize, hiddenSize);    // 1 x hiddenSize
 
             // Update weights and biases
             W1 = subtract(W1, scalar_multiply(W1g, eta, features, hiddenSize), features, hiddenSize);
             W2 = subtract(W2, scalar_multiply(W2g, eta, hiddenSize, outputs), hiddenSize, outputs);
             b1 = subtract(b1, scalar_multiply(b1g, eta, 1, hiddenSize), 1, hiddenSize);
             b2 = subtract(b2, scalar_multiply(b2g, eta, 1, outputs), 1, outputs);
-
-            // Free memory
-            free_matrix(Xb, batchSize);
-            free_matrix(Yb, batchSize);
-            free_matrix(H, batchSize);
-            free_matrix(Y_hat, batchSize);
-            free_matrix(E, batchSize);
-            free_matrix(deltaOutput, batchSize);
-            free_matrix(W2g, hiddenSize);
-            free_matrix(b2g, 1);
-            free_matrix(He, batchSize);
-            free_matrix(W1g, features);
-            free_matrix(b1g, 1);
         }
     }
+
+    // Free memory
+    free_matrix(Xb, batchSize);
+    free_matrix(Yb, batchSize);
+    free_matrix(H, batchSize);
+    free_matrix(Y_hat, batchSize);
+    free_matrix(E, batchSize);
+    free_matrix(deltaOutput, batchSize);
+    free_matrix(W2g, hiddenSize);
+    free_matrix(b2g, 1);
+    free_matrix(He, batchSize);
+    free_matrix(W1g, features);
+    free_matrix(b1g, 1);
 
     MLP_model model = {W1, W2, b1, b2};
     return model;
