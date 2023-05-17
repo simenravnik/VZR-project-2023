@@ -24,6 +24,11 @@ MLP_model train_mlp(double** X, double** Y, int samples, int features, int outpu
     double** b1 = random_matrix(1, hiddenSize);
     double** b2 = random_matrix(1, outputs);
 
+    // print_matrix(W1, features, hiddenSize);
+    // print_matrix(W2, hiddenSize, outputs);
+    // print_matrix(b1, 1, hiddenSize);
+    // print_matrix(b2, 1, outputs);
+
     double **Xb, **Yb, **H, **Y_hat, **E, **deltaOutput, **W2g, **b2g, **He, **W1g, **b1g;
 
     // Train the model
@@ -76,7 +81,7 @@ MLP_model train_mlp(double** X, double** Y, int samples, int features, int outpu
 int main(int argc, char** argv) {
 
     // Read data
-    DataFrame df = read_csv("../data/iris.data");
+    DataFrame df = read_csv("../../data/iris.data");
 
     // Train-test split
     int trainSize = (int)(df.rows * 1.0);   // TODO: For now we use the entire dataset for training
@@ -93,6 +98,9 @@ int main(int argc, char** argv) {
     int classes = 3;
     split.Y_train = one_hot_encode(split.Y_train, trainSize, classes);
     split.Y_test = one_hot_encode(split.Y_test, testSize, classes);
+
+    // print_matrix(split.X_train, trainSize, features);
+    // print_matrix(split.Y_train, trainSize, classes);
 
     int hiddenSize = 20;
     int batchSize = 10;
