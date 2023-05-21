@@ -45,10 +45,10 @@ void free_device_matrix(Matrix m) {
 }
 
 // CUDA kernels
-__global__ void device_matrix_tanh(float* input, int size) {
+__global__ void device_matrix_tanh(float* A, float* C, int rowsA, int colsA) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx < size) {
-        input[idx] = tanh(input[idx]);
+    if (idx < rowsA * colsA) {
+        C[idx] = tanh(A[idx]);
     }
 }
 
