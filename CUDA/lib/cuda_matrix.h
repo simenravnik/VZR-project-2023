@@ -56,7 +56,7 @@ Matrix to_host(Matrix m) {
     return m_host;
 }
 
-void free_matrix(Matrix m) {
+void free_device_matrix(Matrix m) {
     checkCudaErrors(cudaFree(m.data));
 }
 

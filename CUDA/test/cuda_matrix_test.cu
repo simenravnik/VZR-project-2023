@@ -38,9 +38,9 @@ int test_device_dot(Matrix A, Matrix B) {
     Matrix C = to_host(C_dev);
 
     // Free device memory
-    free_matrix(A_dev);
-    free_matrix(B_dev);
-    free_matrix(C_dev);
+    free_device_matrix(A_dev);
+    free_device_matrix(B_dev);
+    free_device_matrix(C_dev);
 
     // Check if the dot product is correct
     float* C_ref_data = dot(A.data, B.data, A.rows, A.cols, B.rows, B.cols);
