@@ -28,6 +28,7 @@ Matrix square(Matrix mat);
 Matrix matrix_tanh(Matrix mat);
 Matrix scalar_multiply(Matrix mat, float scalar);
 Matrix argmax(Matrix mat);
+int compare_matrices(Matrix mat1, Matrix mat2);
 
 Matrix allocate_matrix(int rows, int cols) {
     float* data = (float*) malloc(rows * cols * sizeof(float));
@@ -194,6 +195,20 @@ Matrix argmax(Matrix mat) {
         }
     }
     return max;
+}
+
+int compare_matrices(Matrix A, Matrix B) {
+    if (A.rows != B.rows || A.cols != B.cols) {
+        return 1;
+    }
+
+    for (int i = 0; i < A.rows * A.cols; i++) {
+        if (abs(A.data[i] - B.data[i]) > 0.0001) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 #endif
