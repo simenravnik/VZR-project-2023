@@ -9,13 +9,10 @@
 #include "matrix.h"
 
 typedef struct TrainTestSplit {
-    float* X_train;
-    float* X_test;
-    float* Y_train;
-    float* Y_test;
-    int trainSize;
-    int testSize;
-    int features;
+    Matrix X_train;
+    Matrix X_test;
+    Matrix Y_train;
+    Matrix Y_test;
 } TrainTestSplit;
 
 typedef struct Data {
@@ -26,9 +23,9 @@ typedef struct Data {
 TrainTestSplit train_test_split(DataFrame df, int trainSize, int testSize);
 Data extract_data(DataFrame df);
 TrainTestSplit split(float* X, float* Y, int samples, int features, int trainSize, int testSize);
-float* normalize(float* X, int samples, int features);
-float* one_hot_encode(float* Y, int samples, int classes);
-float accuracy_score(float* y_true, float* y_pred, int rows, int cols);
+Matrix normalize(Matrix X);
+Matrix one_hot_encode(Matrix Y, int classes);
+float accuracy_score(Matrix y_true, Matrix y_pred);
 
 /*
  * Returns data splitted into train and test
@@ -74,80 +71,80 @@ Data extract_data(DataFrame df) {
 */
 TrainTestSplit split(float* X, float* Y, int samples, int features, int trainSize, int testSize) {
 
-    float* X_train = (float*)malloc(sizeof(float) * trainSize * features);
-    float* X_test = (float*)malloc(sizeof(float) * testSize * features);
-    float* Y_train = (float*)malloc(sizeof(float) * trainSize);
-    float* Y_test = (float*)malloc(sizeof(float) * testSize);
+    Matrix X_train = allocate_matrix(trainSize, features);
+    Matrix X_test = allocate_matrix(testSize, features);
+    Matrix Y_train = allocate_matrix(trainSize, 1);
+    Matrix Y_test = allocate_matrix(testSize, 1);
 
     // Assign values to X_train and X_test
     for (int i = 0; i < trainSize; i++) {
         for (int j = 0; j < features; j++) {
-            X_train[i * features + j] = X[i * features + j];
+            X_train.data[i * features + j] = X[i * features + j];
         }
     }
 
     for (int i = 0; i < testSize; i++) {
         for (int j = 0; j < features; j++) {
-            X_test[i * features + j] = X[(i + trainSize) * features + j];
+            X_test.data[i * features + j] = X[(i + trainSize) * features + j];
         }
     }
 
     // Assign values to Y_train and Y_test
     for (int i = 0; i < trainSize; i++) {
-        Y_train[i] = Y[i];
+        Y_train.data[i] = Y[i];
     }
 
     for (int i = 0; i < testSize; i++) {
-        Y_test[i] = Y[i + trainSize];
+        Y_test.data[i] = Y[i + trainSize];
     }
 
-    TrainTestSplit tts = {X_train, X_test, Y_train, Y_test, trainSize, testSize, features};
+    TrainTestSplit tts = {X_train, X_test, Y_train, Y_test};
     return tts;
 }
 
-float* normalize(float* X, int samples, int features) {
+Matrix normalize(Matrix X) {
 
-    float* X_norm = (float*)malloc(sizeof(float) * samples * features);
-    float* mean = (float*)malloc(sizeof(float) * features);
-    float* std = (float*)malloc(sizeof(float) * features);
+    Matrix X_norm = allocate_matrix(X.rows, X.cols);
+    float* mean = (float*)malloc(sizeof(float) * X.cols);
+    float* std = (float*)malloc(sizeof(float) * X.cols);
 
     // Calculate mean and std
-    for (int i = 0; i < features; i++) {
+    for (int i = 0; i < X.cols; i++) {
         float sum = 0;
-        for (int j = 0; j < samples; j++) {
-            sum += X[j * features + i];
+        for (int j = 0; j < X.rows; j++) {
+            sum += X.data[j * X.cols + i];
         }
-        mean[i] = sum / samples;
+        mean[i] = sum / X.rows;
     }
 
-    for (int i = 0; i < features; i++) {
+    for (int i = 0; i < X.cols; i++) {
         float sum = 0;
-        for (int j = 0; j < samples; j++) {
-            sum += pow(X[j * features + i] - mean[i], 2);
+        for (int j = 0; j < X.rows; j++) {
+            sum += pow(X.data[j * X.cols + i] - mean[i], 2);
         }
-        std[i] = sqrt(sum / samples);
+        std[i] = sqrt(sum / X.rows);
     }
 
     // Normalize
-    for (int i = 0; i < samples; i++) {
-        for (int j = 0; j < features; j++) {
-            X_norm[i * features + j] = (X[i * features + j] - mean[j]) / std[j];
+    for (int i = 0; i < X.rows; i++) {
+        for (int j = 0; j < X.cols; j++) {
+            X_norm.data[i * X.cols + j] = (X.data[i * X.cols + j] - mean[j]) / std[j];
         }
     }
 
     return X_norm;
 }
 
-float* one_hot_encode(float* Y, int samples, int classes) {
+Matrix one_hot_encode(Matrix Y, int classes) {
 
-    float* Y_encoded = (float*)malloc(sizeof(float) * samples * classes);
+    Matrix Y_encoded = allocate_matrix(Y.rows, classes);
 
-    for (int i = 0; i < samples; i++) {
+    for (int i = 0; i < Y.rows; i++) {
         for (int j = 0; j < classes; j++) {
-            if (Y[i] == j) {
-                Y_encoded[i * classes + j] = 1;
+            if (Y.data[i] == j) {
+                Y_encoded.data[i * classes + j] = 1;
             } else {
-                Y_encoded[i * classes + j] = 0;
+                Y_encoded.data[i * classes + j] = 0;
             }
         }
     }
@@ -155,19 +152,19 @@ float* one_hot_encode(float* Y, int samples, int classes) {
     return Y_encoded;
 }
 
-float accuracy_score(float* y_true, float* y_pred, int rows, int cols) {
+float accuracy_score(Matrix y_true, Matrix y_pred) {
 
-    float* y_true_argmax = argmax(y_true, rows, cols);
-    float* y_pred_argmax = argmax(y_pred, rows, cols);
+    Matrix y_true_argmax = argmax(y_true);
+    Matrix y_pred_argmax = argmax(y_pred);
 
     float correct = 0;
-    for (int i = 0; i < rows; i++) {
-        if (y_true_argmax[i] == y_pred_argmax[i]) {
+    for (int i = 0; i < y_true.rows; i++) {
+        if (y_true_argmax.data[i] == y_pred_argmax.data[i]) {
             correct++;
         }
     }
 
-    return correct / rows;
+    return correct / y_true.rows;
 }
 
 

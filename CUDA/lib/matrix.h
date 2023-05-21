@@ -6,84 +6,97 @@
 #include <string.h>
 #include <math.h>
 
-float* allocate_matrix(int rows, int cols);
-void free_matrix(float* mat, int rows);
-float* random_matrix(int rows, int cols);
-void print_matrix(float* mat, int rows, int cols);
-float* slice_matrix(float* mat, int startRow, int endRow, int startCol, int endCol);
-float* dot(float* mat1, float* mat2, int rows1, int cols1, int rows2, int cols2);
-float* add(float* mat1, float* mat2, int rows, int cols);
-float* subtract(float* mat1, float* mat2, int rows, int cols);
-float* hadamard(float* mat1, float* mat2, int rows, int cols);
-float* transpose(float* mat, int rows, int cols);
-float* sum(float* mat, int rows, int cols);
-float* ones(int rows, int cols);
-float* square(float* mat, int rows, int cols);
-float* matrix_tanh(float* mat, int rows, int cols);
-float* scalar_multiply(float* mat, float scalar, int rows, int cols);
-float* argmax(float* mat, int rows, int cols);
+typedef struct Matrix {
+    float* data;
+    int rows;
+    int cols;
+} Matrix;
 
-float* allocate_matrix(int rows, int cols) {
-    float* mat = (float*) malloc(rows * cols * sizeof(float));
+Matrix allocate_matrix(int rows, int cols);
+void free_matrix(Matrix mat);
+Matrix random_matrix(int rows, int cols);
+void print_matrix(Matrix mat);
+Matrix slice_matrix(Matrix mat, int startRow, int endRow, int startCol, int endCol);
+Matrix dot(Matrix mat1, Matrix mat2);
+Matrix add(Matrix mat1, Matrix mat2);
+Matrix subtract(Matrix mat1, Matrix mat2);
+Matrix hadamard(Matrix mat1, Matrix mat2);
+Matrix transpose(Matrix mat);
+Matrix sum(Matrix mat);
+Matrix ones(int rows, int cols);
+Matrix square(Matrix mat);
+Matrix matrix_tanh(Matrix mat);
+Matrix scalar_multiply(Matrix mat, float scalar);
+Matrix argmax(Matrix mat);
+int compare_matrices(Matrix mat1, Matrix mat2);
+
+Matrix allocate_matrix(int rows, int cols) {
+    float* data = (float*) malloc(rows * cols * sizeof(float));
+    Matrix mat = {data, rows, cols};
     return mat;
 }
 
-void free_matrix(float* mat, int rows) {
-    free(mat);
+void free_matrix(Matrix mat) {
+    free(mat.data);
 }
 
-float* random_matrix(int rows, int cols) {
-    float* mat = allocate_matrix(rows, cols);
+Matrix random_matrix(int rows, int cols) {
+    Matrix mat = allocate_matrix(rows, cols);
     for (int i = 0; i < rows * cols; i++) {
-        mat[i] = (float) rand() / RAND_MAX;
+        mat.data[i] = (float) rand() / RAND_MAX;
     }
     return mat;
 }
 
-void print_matrix(float* mat, int rows, int cols) {
+void print_matrix(Matrix mat) {
     printf("[");
-    for (int i = 0; i < rows * cols; i++) {
-        if (i % cols == 0) {
+    for (int i = 0; i < mat.rows * mat.cols; i++) {
+        if (i % mat.cols == 0) {
             printf("[");
         }
-        printf("%f", mat[i]);
-        if (i % cols == cols - 1) {
+        printf("%f", mat.data[i]);
+        if (i % mat.cols == mat.cols - 1) {
             printf("]");
         } else {
             printf(", ");
         }
-        if ((i + 1) % cols == 0 && i != rows * cols - 1) {
+        if ((i + 1) % mat.cols == 0 && i != mat.rows * mat.cols - 1) {
             printf(",\n");
         }
     }
     printf("]\n\n");
 }
 
-float* slice_matrix(float* mat, int startRow, int endRow, int startCol, int endCol) {
+void print_size(Matrix mat) {
+    printf("(%d, %d)\n", mat.rows, mat.cols);
+}
+
+Matrix slice_matrix(Matrix mat, int startRow, int endRow, int startCol, int endCol) {
     int rows = endRow - startRow;
     int cols = endCol - startCol;
-    float* slice = allocate_matrix(rows, cols);
+    Matrix slice = allocate_matrix(rows, cols);
     for (int i = startRow; i < endRow; i++) {
         for (int j = startCol; j < endCol; j++) {
-            slice[(i - startRow) * cols + (j - startCol)] = mat[i * endCol + j];
+            slice.data[(i - startRow) * cols + (j - startCol)] = mat.data[i * endCol + j];
         }
     }
     return slice;
 }
 
-float* dot(float* mat1, float* mat2, int rows1, int cols1, int rows2, int cols2) {
-    if (cols1 != rows2) {
+Matrix dot(Matrix mat1, Matrix mat2) {
+    if (mat1.cols != mat2.rows) {
         printf("Error: Matrix dimensions do not match for dot product\n");
-        return NULL;
+        Matrix null = {NULL, 0, 0};
+        return null;
     }
-    float* product = allocate_matrix(rows1, cols2);
-    for (int i = 0; i < rows1; i++) {
-        for (int j = 0; j < cols2; j++) {
-            float sum = 0;
-            for (int k = 0; k < cols1; k++) {
-                sum += mat1[i * cols1 + k] * mat2[k * cols2 + j];
+    Matrix product = allocate_matrix(mat1.rows, mat2.cols);
+    for (int i = 0; i < mat1.rows; i++) {
+        for (int j = 0; j < mat2.cols; j++) {
+            double sum = 0;
+            for (int k = 0; k < mat1.cols; k++) {
+                sum += mat1.data[i * mat1.cols + k] * mat2.data[k * mat2.cols + j];
             }
-            product[i * cols2 + j] = sum;
+            product.data[i * mat2.cols + j] = (float)sum;
         }
     }
     return product;
@@ -95,93 +108,107 @@ float* dot(float* mat1, float* mat2, int rows1, int cols1, int rows2, int cols2)
  * 
  * Do not use for matrix addition
 */
-float* add(float* mat1, float* mat2, int rows, int cols) {
-    float* sum = allocate_matrix(rows, cols);
-    for (int i = 0; i < rows * cols; i++) {
-        sum[i] = mat1[i] + mat2[i % cols];
+Matrix add(Matrix mat1, Matrix mat2) {
+    Matrix sum = allocate_matrix(mat1.rows, mat1.cols);
+    for (int i = 0; i < mat1.rows * mat1.cols; i++) {
+        sum.data[i] = mat1.data[i] + mat2.data[i % mat1.cols];
     }
     return sum;
 }
 
-float* subtract(float* mat1, float* mat2, int rows, int cols) {
-    float* difference = allocate_matrix(rows, cols);
-    for (int i = 0; i < rows * cols; i++) {
-        difference[i] = mat1[i] - mat2[i];
+Matrix subtract(Matrix mat1, Matrix mat2) {
+    Matrix difference = allocate_matrix(mat1.rows, mat1.cols);
+    for (int i = 0; i < mat1.rows * mat1.cols; i++) {
+        difference.data[i] = mat1.data[i] - mat2.data[i];
     }
     return difference;
 }
 
-float* hadamard(float* mat1, float* mat2, int rows, int cols) {
-    float* product = allocate_matrix(rows, cols);
-    for (int i = 0; i < rows * cols; i++) {
-        product[i] = mat1[i] * mat2[i];
+Matrix hadamard(Matrix mat1, Matrix mat2) {
+    Matrix product = allocate_matrix(mat1.rows, mat1.cols);
+    for (int i = 0; i < mat1.rows * mat1.cols; i++) {
+        product.data[i] = mat1.data[i] * mat2.data[i];
     }
     return product;
 }
 
-float* transpose(float* mat, int rows, int cols) {
-    float* trans = allocate_matrix(cols, rows);
-    for (int i = 0; i < rows * cols; i++) {
-        trans[(i % cols) * rows + (i / cols)] = mat[i];
+Matrix transpose(Matrix mat) {
+    Matrix trans = allocate_matrix(mat.cols, mat.rows);
+    for (int i = 0; i < mat.rows * mat.cols; i++) {
+        trans.data[(i % mat.cols) * mat.rows + (i / mat.cols)] = mat.data[i];
     }
     return trans;
 }
 
-float* sum(float* mat, int rows, int cols) {
-    float* sum = allocate_matrix(1, cols);
-    for (int i = 0; i < cols; i++) {
-        float colSum = 0;
-        for (int j = 0; j < rows; j++) {
-            colSum += mat[j * cols + i];
+Matrix sum(Matrix mat) {
+    Matrix sum = allocate_matrix(1, mat.cols);
+    for (int i = 0; i < mat.cols; i++) {
+        double colSum = 0;
+        for (int j = 0; j < mat.rows; j++) {
+            colSum += mat.data[j * mat.cols + i];
         }
-        sum[i] = colSum;
+        sum.data[i] = (float)colSum;
     }
     return sum;
 }
 
-float* ones(int rows, int cols) {
-    float* ones = allocate_matrix(rows, cols);
+Matrix ones(int rows, int cols) {
+    Matrix ones = allocate_matrix(rows, cols);
     for (int i = 0; i < rows * cols; i++) {
-        ones[i] = 1;
+        ones.data[i] = 1;
     }
     return ones;
 }
 
-float* square(float* mat, int rows, int cols) {
-    float* square = allocate_matrix(rows, cols);
-    for (int i = 0; i < rows * cols; i++) {
-        square[i] = mat[i] * mat[i];
+Matrix square(Matrix mat) {
+    Matrix square = allocate_matrix(mat.rows, mat.cols);
+    for (int i = 0; i < mat.rows * mat.cols; i++) {
+        square.data[i] = mat.data[i] * mat.data[i];
     }
     return square;
 }
 
-float* matrix_tanh(float* mat, int rows, int cols) {
-    float* tanh = allocate_matrix(rows, cols);
-    for (int i = 0; i < rows * cols; i++) {
-        tanh[i] = tanhf(mat[i]);
+Matrix matrix_tanh(Matrix mat) {
+    Matrix tanh = allocate_matrix(mat.rows, mat.cols);
+    for (int i = 0; i < mat.rows * mat.cols; i++) {
+        tanh.data[i] = tanhf(mat.data[i]);
     }
     return tanh;
 }
 
-float* scalar_multiply(float* mat, float scalar, int rows, int cols) {
-    float* product = allocate_matrix(rows, cols);
-    for (int i = 0; i < rows * cols; i++) {
-        product[i] = mat[i] * scalar;
+Matrix scalar_multiply(Matrix mat, float scalar) {
+    Matrix product = allocate_matrix(mat.rows, mat.cols);
+    for (int i = 0; i < mat.rows * mat.cols; i++) {
+        product.data[i] = mat.data[i] * scalar;
     }
     return product;
 }
 
-float* argmax(float* mat, int rows, int cols) {
-    float* max = allocate_matrix(rows, 1);
-    for (int i = 0; i < rows; i++) {
-        max[i] = 0;
-        for (int j = 0; j < cols; j++) {
-            if (mat[i * cols + j] > mat[i * cols + (int)max[i]]) {
-                max[i] = j;
+Matrix argmax(Matrix mat) {
+    Matrix max = allocate_matrix(mat.rows, 1);
+    for (int i = 0; i < mat.rows; i++) {
+        max.data[i] = 0;
+        for (int j = 0; j < mat.cols; j++) {
+            if (mat.data[i * mat.cols + j] > mat.data[i * mat.cols + (int)max.data[i]]) {
+                max.data[i] = j;
             }
         }
     }
     return max;
+}
+
+int compare_matrices(Matrix A, Matrix B) {
+    if (A.rows != B.rows || A.cols != B.cols) {
+        return 1;
+    }
+
+    for (int i = 0; i < A.rows * A.cols; i++) {
+        if (abs(A.data[i] - B.data[i]) > 0.0001) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 #endif

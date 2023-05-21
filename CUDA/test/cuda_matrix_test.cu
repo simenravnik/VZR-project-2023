@@ -43,8 +43,7 @@ int test_device_dot(Matrix A, Matrix B) {
     free_device_matrix(C_dev);
 
     // Check if the dot product is correct
-    float* C_ref_data = dot(A.data, B.data, A.rows, A.cols, B.rows, B.cols);
-    Matrix C_ref = { C_ref_data, A.rows, B.cols };
+    Matrix C_ref = dot(A, B);
 
     // Compare the matrices
     int error = compare_matrices(C, C_ref);
@@ -63,8 +62,8 @@ int main(int argc, char** argv) {
     const int rows_B = 20;
     const int cols_B = 10;
 
-    Matrix A = create_random_matrix(rows_A, cols_A);
-    Matrix B = create_random_matrix(rows_B, cols_B);
+    Matrix A = random_matrix(rows_A, cols_A);
+    Matrix B = random_matrix(rows_B, cols_B);
     
     // Dot product of A and B
     if (test_device_dot(A, B)) {

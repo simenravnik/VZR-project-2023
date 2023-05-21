@@ -11,22 +11,6 @@
 
 #include "helper_cuda.h"
 
-typedef struct Matrix {
-    float* data;
-    int rows;
-    int cols;
-} Matrix;
-
-// CPU functions
-Matrix create_random_matrix(int rows, int cols) {
-    Matrix m = {
-        .rows = rows,
-        .cols = cols
-    };
-    m.data = random_matrix(rows, cols);
-    return m;
-}
-
 Matrix create_on_device(int rows, int cols) {
     Matrix m_dev = {
         .rows = rows,
@@ -58,20 +42,6 @@ Matrix to_host(Matrix m) {
 
 void free_device_matrix(Matrix m) {
     checkCudaErrors(cudaFree(m.data));
-}
-
-int compare_matrices(Matrix A, Matrix B) {
-    if (A.rows != B.rows || A.cols != B.cols) {
-        return 1;
-    }
-
-    for (int i = 0; i < A.rows * A.cols; i++) {
-        if (abs(A.data[i] - B.data[i]) > 0.0001) {
-            return 1;
-        }
-    }
-
-    return 0;
 }
 
 // CUDA kernels
