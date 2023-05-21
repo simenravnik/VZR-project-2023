@@ -21,49 +21,37 @@ void print_passed(const char* test_name) {
     reset();
 }
 
-int test_device_dot(float* A, float* B, int rowsA, int colsA, int colsB) {
+int test_device_dot(Matrix A, Matrix B) {
 
-    float* C = allocate_matrix(rowsA, colsB);
-
-    float* A_dev;
-    float* B_dev;
-    float* C_dev;
-
-    checkCudaErrors(cudaMalloc(&A_dev, rowsA * colsA * sizeof(float)));
-    checkCudaErrors(cudaMalloc(&B_dev, colsA * colsB * sizeof(float)));
-    checkCudaErrors(cudaMalloc(&C_dev, rowsA * colsB * sizeof(float)));
-
-    // Transfer the image from the host to the device
-    cudaMemcpy(A_dev, A, rowsA * colsA * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(B_dev, B, colsA * colsB * sizeof(float), cudaMemcpyHostToDevice);
+    // Allocate memory on the device
+    Matrix A_dev = to_device(A);
+    Matrix B_dev = to_device(B);
+    Matrix C_dev = create_on_device(A.rows, B.cols);
 
     // Block size and grid size
     int blockSize = 32;
-    int gridSize = (rowsA * colsB + blockSize - 1) / blockSize;
+    int gridSize = (A_dev.rows * B_dev.cols + blockSize - 1) / blockSize;
 
-    device_dot<<<gridSize, blockSize>>>(A_dev, B_dev, C_dev, rowsA, colsA, colsB);
+    device_dot<<<gridSize, blockSize>>>(A_dev.data, B_dev.data, C_dev.data, A_dev.rows, A_dev.cols, B_dev.cols);
 
     // Copy data back to the host
-    checkCudaErrors(cudaMemcpy(C, C_dev, rowsA * colsB * sizeof(float), cudaMemcpyDeviceToHost));
+    Matrix C = to_host(C_dev);
 
     // Free device memory
-    checkCudaErrors(cudaFree(A_dev));
-    checkCudaErrors(cudaFree(B_dev));
-    checkCudaErrors(cudaFree(C_dev));
+    free_matrix(A_dev);
+    free_matrix(B_dev);
+    free_matrix(C_dev);
 
     // Check if the dot product is correct
-    float* C_ref = dot(A, B, rowsA, colsA, colsA, colsB);
+    float* C_ref_data = dot(A.data, B.data, A.rows, A.cols, B.rows, B.cols);
+    Matrix C_ref = { C_ref_data, A.rows, B.cols };
 
-    int error = 0;
-    for (int i = 0; i < rowsA * colsB; i++) {
-        if (abs(C[i] - C_ref[i]) > 0.0001) {
-            error = 1;
-            break;
-        }
-    }
+    // Compare the matrices
+    int error = compare_matrices(C, C_ref);
 
-    free(C_ref);
-    free(C);
+    // Free host memory
+    free(C_ref.data);
+    free(C.data);
 
     return error;
 }
@@ -75,11 +63,11 @@ int main(int argc, char** argv) {
     const int rows_B = 20;
     const int cols_B = 10;
 
-    float* A = random_matrix(rows_A, cols_A);
-    float* B = random_matrix(rows_B, cols_B);
+    Matrix A = create_random_matrix(rows_A, cols_A);
+    Matrix B = create_random_matrix(rows_B, cols_B);
     
     // Dot product of A and B
-    if (test_device_dot(A, B, rows_A, cols_A, cols_B)) {
+    if (test_device_dot(A, B)) {
         print_failed("Device Dot Test");
     } else {
         print_passed("Device Dot Test");

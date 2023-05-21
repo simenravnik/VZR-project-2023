@@ -4,12 +4,77 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "matrix.h"
 
 #include <cuda.h>
 #include <cuda_runtime.h>
 
 #include "helper_cuda.h"
 
+typedef struct Matrix {
+    float* data;
+    int rows;
+    int cols;
+} Matrix;
+
+// CPU functions
+Matrix create_random_matrix(int rows, int cols) {
+    Matrix m = {
+        .rows = rows,
+        .cols = cols
+    };
+    m.data = random_matrix(rows, cols);
+    return m;
+}
+
+Matrix create_on_device(int rows, int cols) {
+    Matrix m_dev = {
+        .rows = rows,
+        .cols = cols
+    };
+    checkCudaErrors(cudaMalloc(&m_dev.data, rows * cols * sizeof(float)));
+    return m_dev;
+}
+
+Matrix to_device(Matrix m) {
+    Matrix m_dev = {
+        .rows = m.rows,
+        .cols = m.cols
+    };
+    checkCudaErrors(cudaMalloc(&m_dev.data, m.rows * m.cols * sizeof(float)));
+    cudaMemcpy(m_dev.data, m.data, m.rows * m.cols * sizeof(float), cudaMemcpyHostToDevice);
+    return m_dev;
+}
+
+Matrix to_host(Matrix m) {
+    Matrix m_host = {
+        .rows = m.rows,
+        .cols = m.cols
+    };
+    m_host.data = (float*) malloc(m.rows * m.cols * sizeof(float));
+    cudaMemcpy(m_host.data, m.data, m.rows * m.cols * sizeof(float), cudaMemcpyDeviceToHost);
+    return m_host;
+}
+
+void free_matrix(Matrix m) {
+    checkCudaErrors(cudaFree(m.data));
+}
+
+int compare_matrices(Matrix A, Matrix B) {
+    if (A.rows != B.rows || A.cols != B.cols) {
+        return 1;
+    }
+
+    for (int i = 0; i < A.rows * A.cols; i++) {
+        if (abs(A.data[i] - B.data[i]) > 0.0001) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+// CUDA kernels
 __global__ void device_matrix_tanh(float* input, int size) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < size) {
