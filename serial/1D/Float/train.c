@@ -76,7 +76,7 @@ MLP_model train_mlp(double* X, double* Y, int samples, int features, int outputs
 int main(int argc, char** argv) {
 
     // Read data
-    DataFrame df = read_csv("../../data/iris.data");
+    DataFrame df = read_csv("../../../data/iris.data");
 
     // Train-test split
     int trainSize = (int)(df.rows * 1.0);   // TODO: For now we use the entire dataset for training
