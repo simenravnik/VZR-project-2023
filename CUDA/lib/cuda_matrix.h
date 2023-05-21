@@ -52,10 +52,10 @@ __global__ void device_matrix_tanh(float* input, int size) {
     }
 }
 
-__global__ void device_add(float* A, float* B, int size) {
+__global__ void device_add(float* A, float* B, float* C, int rowsA, int colsA, int rowsB, int colsB) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx < size) {
-        A[idx] += B[idx];
+    if (idx < rowsA * colsA) {
+        C[idx] = A[idx] + B[idx % colsA];
     }
 }
 
