@@ -74,4 +74,52 @@ __global__ void device_dot(float* A, float* B, float* C, int rowsA, int colsA, i
     }
 }
 
+__global__ void device_subtract(float* A, float* B, float* C, int rowsA, int colsA, int rowsB, int colsB) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < rowsA * colsA) {
+        C[idx] = A[idx] - B[idx];
+    }
+}
+
+__global__ void device_hadamard(float* A, float* B, float* C, int rowsA, int colsA, int rowsB, int colsB) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < rowsA * colsA) {
+        C[idx] = A[idx] * B[idx];
+    }
+}
+
+__global__ void device_transpose(float* A, float* C, int rowsA, int colsA) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < rowsA * colsA) {
+        int row = idx / colsA;
+        int col = idx % colsA;
+        C[col * rowsA + row] = A[idx];
+    }
+}
+
+__global__ void device_sum(float* A, float* C, int rowsA, int colsA) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < colsA) {
+        float sum = 0.0f;
+        for (int i = 0; i < rowsA; ++i) {
+            sum += A[i * colsA + idx];
+        }
+        C[idx] = sum;
+    }
+}
+
+__global__ void device_square(float* A, float* C, int rowsA, int colsA) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < rowsA * colsA) {
+        C[idx] = A[idx] * A[idx];
+    }
+}
+
+__global__ void device_scalar_multiply(float* A, float* C, float scalar, int rowsA, int colsA) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < rowsA * colsA) {
+        C[idx] = A[idx] * scalar;
+    }
+}
+
 #endif
