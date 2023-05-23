@@ -52,7 +52,7 @@ __global__ void device_matrix_tanh(float* A, float* C, int rowsA, int colsA) {
     }
 }
 
-__global__ void device_add(float* A, float* B, float* C, int rowsA, int colsA, int rowsB, int colsB) {
+__global__ void device_add(float* A, float* B, float* C, int rowsA, int colsA) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < rowsA * colsA) {
         C[idx] = A[idx] + B[idx % colsA];
@@ -74,14 +74,14 @@ __global__ void device_dot(float* A, float* B, float* C, int rowsA, int colsA, i
     }
 }
 
-__global__ void device_subtract(float* A, float* B, float* C, int rowsA, int colsA, int rowsB, int colsB) {
+__global__ void device_subtract(float* A, float* B, float* C, int rowsA, int colsA) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < rowsA * colsA) {
         C[idx] = A[idx] - B[idx];
     }
 }
 
-__global__ void device_hadamard(float* A, float* B, float* C, int rowsA, int colsA, int rowsB, int colsB) {
+__global__ void device_hadamard(float* A, float* B, float* C, int rowsA, int colsA) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < rowsA * colsA) {
         C[idx] = A[idx] * B[idx];

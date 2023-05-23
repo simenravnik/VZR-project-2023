@@ -29,7 +29,7 @@ void compute_H(Matrix H_dev, Matrix Xb_dev, Matrix W1_dev, Matrix b1_dev) {
 
     // Compute the hidden layer
     device_dot<<<gridSize, blockSize>>>(Xb_dev.data, W1_dev.data, H_dev.data, batchSize, features, hiddenSize);
-    device_add<<<gridSize, blockSize>>>(H_dev.data, b1_dev.data, H_dev.data, batchSize, hiddenSize, b1_dev.rows, b1_dev.cols);
+    device_add<<<gridSize, blockSize>>>(H_dev.data, b1_dev.data, H_dev.data, batchSize, hiddenSize);
     device_matrix_tanh<<<gridSize, blockSize>>>(H_dev.data, H_dev.data, batchSize, hiddenSize);
 }
 
@@ -45,7 +45,7 @@ void compute_Y_hat(Matrix Y_hat_dev, Matrix H_dev, Matrix W2_dev, Matrix b2_dev)
 
     // Compute the output layer
     device_dot<<<gridSize, blockSize>>>(H_dev.data, W2_dev.data, Y_hat_dev.data, batchSize, hiddenSize, outputs);
-    device_add<<<gridSize, blockSize>>>(Y_hat_dev.data, b2_dev.data, Y_hat_dev.data, batchSize, outputs, b2_dev.rows, b2_dev.cols);
+    device_add<<<gridSize, blockSize>>>(Y_hat_dev.data, b2_dev.data, Y_hat_dev.data, batchSize, outputs);
     device_matrix_tanh<<<gridSize, blockSize>>>(Y_hat_dev.data, Y_hat_dev.data, batchSize, outputs);
 }
 
@@ -59,7 +59,7 @@ void compute_E(Matrix E, Matrix Y_hat, Matrix Yb) {
     int gridSize = (batchSize * outputs + blockSize - 1) / blockSize;
 
     // Compute the error
-    device_subtract<<<gridSize, blockSize>>>(Y_hat.data, Yb.data, E.data, batchSize, outputs, Yb.rows, Yb.cols);
+    device_subtract<<<gridSize, blockSize>>>(Y_hat.data, Yb.data, E.data, batchSize, outputs);
 }
 
 void compute_delta_output(Matrix deltaOutput_dev, Matrix E_dev, Matrix ones_dev, Matrix Y_hat_dev) {
@@ -72,8 +72,8 @@ void compute_delta_output(Matrix deltaOutput_dev, Matrix E_dev, Matrix ones_dev,
         int gridSize = (batchSize * outputs + blockSize - 1) / blockSize;
     
         device_square<<<gridSize, blockSize>>>(Y_hat_dev.data, Y_hat_dev.data, batchSize, outputs);
-        device_subtract<<<gridSize, blockSize>>>(ones_dev.data, Y_hat_dev.data, deltaOutput_dev.data, batchSize, outputs, ones_dev.rows, ones_dev.cols);
-        device_hadamard<<<gridSize, blockSize>>>(E_dev.data, deltaOutput_dev.data, deltaOutput_dev.data, batchSize, outputs, batchSize, outputs);
+        device_subtract<<<gridSize, blockSize>>>(ones_dev.data, Y_hat_dev.data, deltaOutput_dev.data, batchSize, outputs);
+        device_hadamard<<<gridSize, blockSize>>>(E_dev.data, deltaOutput_dev.data, deltaOutput_dev.data, batchSize, outputs);
 }
 
 void compute_w2g(Matrix W2g_dev, Matrix H_dev, Matrix deltaOutput_dev) {
@@ -114,8 +114,8 @@ void compute_He(Matrix He_dev, Matrix deltaOutput_dev, Matrix W2_dev, Matrix H_d
     device_dot<<<gridSizeDot, blockSize>>>(deltaOutput_dev.data, He_dev.data, He_dev.data, batchSize, outputs, hiddenSize);
 
     device_square<<<gridSizeDot, blockSize>>>(H_dev.data, H_dev.data, batchSize, hiddenSize);
-    device_subtract<<<gridSizeDot, blockSize>>>(ones2_dev.data, H_dev.data, H_dev.data, batchSize, hiddenSize, ones2_dev.rows, ones2_dev.cols);
-    device_hadamard<<<gridSizeDot, blockSize>>>(He_dev.data, H_dev.data, He_dev.data, batchSize, hiddenSize, batchSize, hiddenSize);
+    device_subtract<<<gridSizeDot, blockSize>>>(ones2_dev.data, H_dev.data, H_dev.data, batchSize, hiddenSize);
+    device_hadamard<<<gridSizeDot, blockSize>>>(He_dev.data, H_dev.data, He_dev.data, batchSize, hiddenSize);
 }
 
 void compute_W1g(Matrix W1g_dev, Matrix Xb_dev, Matrix Xb_transpose_dev, Matrix He_dev) {
@@ -155,7 +155,7 @@ void update_weights(Matrix m, Matrix g, float eta) {
     int gridSize = (rows * cols + blockSize - 1) / blockSize;
 
     device_scalar_multiply<<<gridSize, blockSize>>>(g.data, g.data, eta, rows, cols);
-    device_subtract<<<gridSize, blockSize>>>(m.data, g.data, m.data, rows, cols, rows, cols);
+    device_subtract<<<gridSize, blockSize>>>(m.data, g.data, m.data, rows, cols);
 }
 
 MLP_model train_mlp(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
