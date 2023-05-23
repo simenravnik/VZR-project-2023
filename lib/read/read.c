@@ -1,21 +1,9 @@
-#ifndef READ_H
-#define READ_H
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
 #include "read.h"
-
-typedef struct DataFrame {
-    float *data;
-    int rows;
-    int cols;
-} DataFrame;
-
-DataFrame read_csv(const char *filename);
-void print_data_frame(DataFrame df);
-void free_data_frame(DataFrame df);
 
 DataFrame read_csv(const char *filename) {
     DataFrame df;
@@ -77,5 +65,3 @@ void print_data_frame(DataFrame df) {
 void free_data_frame(DataFrame df) {
     free(df.data);
 }
-
-#endif

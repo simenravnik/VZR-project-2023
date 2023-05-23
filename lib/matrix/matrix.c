@@ -1,34 +1,9 @@
-#ifndef MATRIX_H
-#define MATRIX_H
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
-typedef struct Matrix {
-    float* data;
-    int rows;
-    int cols;
-} Matrix;
-
-Matrix allocate_matrix(int rows, int cols);
-void free_matrix(Matrix mat);
-Matrix random_matrix(int rows, int cols);
-void print_matrix(Matrix mat);
-Matrix slice_matrix(Matrix mat, int startRow, int endRow, int startCol, int endCol);
-Matrix dot(Matrix mat1, Matrix mat2);
-Matrix add(Matrix mat1, Matrix mat2);
-Matrix subtract(Matrix mat1, Matrix mat2);
-Matrix hadamard(Matrix mat1, Matrix mat2);
-Matrix transpose(Matrix mat);
-Matrix sum(Matrix mat);
-Matrix ones(int rows, int cols);
-Matrix square(Matrix mat);
-Matrix matrix_tanh(Matrix mat);
-Matrix scalar_multiply(Matrix mat, float scalar);
-Matrix argmax(Matrix mat);
-int compare_matrices(Matrix mat1, Matrix mat2);
+#include "matrix.h"
 
 Matrix allocate_matrix(int rows, int cols) {
     float* data = (float*) malloc(rows * cols * sizeof(float));
@@ -210,5 +185,3 @@ int compare_matrices(Matrix A, Matrix B) {
 
     return 0;
 }
-
-#endif
