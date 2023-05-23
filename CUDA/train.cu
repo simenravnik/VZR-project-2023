@@ -23,11 +23,9 @@ void compute_H(Matrix H_dev, Matrix Xb_dev, Matrix W1_dev, Matrix b1_dev) {
     int features = Xb_dev.cols;
     int hiddenSize = W1_dev.cols;
 
-    // Define the block and grid size
     int blockSize = 32;
     int gridSize = (batchSize * hiddenSize + blockSize - 1) / blockSize;
 
-    // Compute the hidden layer
     device_dot<<<gridSize, blockSize>>>(Xb_dev.data, W1_dev.data, H_dev.data, batchSize, features, hiddenSize);
     device_add<<<gridSize, blockSize>>>(H_dev.data, b1_dev.data, H_dev.data, batchSize, hiddenSize);
     device_matrix_tanh<<<gridSize, blockSize>>>(H_dev.data, H_dev.data, batchSize, hiddenSize);
@@ -39,11 +37,9 @@ void compute_Y_hat(Matrix Y_hat_dev, Matrix H_dev, Matrix W2_dev, Matrix b2_dev)
     int hiddenSize = H_dev.cols;
     int outputs = W2_dev.cols;
 
-    // Define the block and grid size
     int blockSize = 32;
     int gridSize = (batchSize * outputs + blockSize - 1) / blockSize;
 
-    // Compute the output layer
     device_dot<<<gridSize, blockSize>>>(H_dev.data, W2_dev.data, Y_hat_dev.data, batchSize, hiddenSize, outputs);
     device_add<<<gridSize, blockSize>>>(Y_hat_dev.data, b2_dev.data, Y_hat_dev.data, batchSize, outputs);
     device_matrix_tanh<<<gridSize, blockSize>>>(Y_hat_dev.data, Y_hat_dev.data, batchSize, outputs);
@@ -54,37 +50,37 @@ void compute_E(Matrix E, Matrix Y_hat, Matrix Yb) {
     int batchSize = Y_hat.rows;
     int outputs = Y_hat.cols;
 
-    // Define the block and grid size
     int blockSize = 32;
     int gridSize = (batchSize * outputs + blockSize - 1) / blockSize;
 
-    // Compute the error
     device_subtract<<<gridSize, blockSize>>>(Y_hat.data, Yb.data, E.data, batchSize, outputs);
 }
 
 void compute_delta_output(Matrix deltaOutput_dev, Matrix E_dev, Matrix ones_dev, Matrix Y_hat_dev) {
     
-        int batchSize = E_dev.rows;
-        int outputs = E_dev.cols;
-    
-        // Define the block and grid size
-        int blockSize = 32;
-        int gridSize = (batchSize * outputs + blockSize - 1) / blockSize;
-    
-        device_square<<<gridSize, blockSize>>>(Y_hat_dev.data, Y_hat_dev.data, batchSize, outputs);
-        device_subtract<<<gridSize, blockSize>>>(ones_dev.data, Y_hat_dev.data, deltaOutput_dev.data, batchSize, outputs);
-        device_hadamard<<<gridSize, blockSize>>>(E_dev.data, deltaOutput_dev.data, deltaOutput_dev.data, batchSize, outputs);
+    int batchSize = E_dev.rows;
+    int outputs = E_dev.cols;
+
+    int blockSize = 32;
+    int gridSize = (batchSize * outputs + blockSize - 1) / blockSize;
+
+    device_square<<<gridSize, blockSize>>>(Y_hat_dev.data, Y_hat_dev.data, batchSize, outputs);
+    device_subtract<<<gridSize, blockSize>>>(ones_dev.data, Y_hat_dev.data, deltaOutput_dev.data, batchSize, outputs);
+    device_hadamard<<<gridSize, blockSize>>>(E_dev.data, deltaOutput_dev.data, deltaOutput_dev.data, batchSize, outputs);
 }
 
 void compute_w2g(Matrix W2g_dev, Matrix H_dev, Matrix deltaOutput_dev) {
 
-    // Define the block and grid size
-    int blockSize = 32;
-    int gridSizeTranspose = (H_dev.rows * H_dev.cols + blockSize - 1) / blockSize;
-    int gridSizeDot = (H_dev.cols * deltaOutput_dev.cols + blockSize - 1) / blockSize;
+    int batchSize = H_dev.rows;
+    int hiddenSize = H_dev.cols;
+    int outputs = deltaOutput_dev.cols;
 
-    device_transpose<<<gridSizeTranspose, blockSize>>>(H_dev.data, W2g_dev.data, H_dev.rows, H_dev.cols);
-    device_dot<<<gridSizeDot, blockSize>>>(W2g_dev.data, deltaOutput_dev.data, W2g_dev.data, H_dev.cols, H_dev.rows, deltaOutput_dev.cols);
+    int blockSize = 32;
+    int gridSizeTranspose = (batchSize * hiddenSize + blockSize - 1) / blockSize;
+    int gridSizeDot = (hiddenSize * outputs + blockSize - 1) / blockSize;
+
+    device_transpose<<<gridSizeTranspose, blockSize>>>(H_dev.data, W2g_dev.data, batchSize, hiddenSize);
+    device_dot<<<gridSizeDot, blockSize>>>(W2g_dev.data, deltaOutput_dev.data, W2g_dev.data, hiddenSize, batchSize, outputs);
 }
 
 void compute_b2g(Matrix b2g_dev, Matrix deltaOutput_dev) {
@@ -92,7 +88,6 @@ void compute_b2g(Matrix b2g_dev, Matrix deltaOutput_dev) {
     int batchSize = deltaOutput_dev.rows;
     int outputs = deltaOutput_dev.cols;
 
-    // Define the block and grid size
     int blockSize = 32;
     int gridSize = (batchSize * outputs + blockSize - 1) / blockSize;
 
@@ -105,7 +100,6 @@ void compute_He(Matrix He_dev, Matrix deltaOutput_dev, Matrix W2_dev, Matrix H_d
     int outputs = deltaOutput_dev.cols;
     int hiddenSize = W2_dev.rows;
 
-    // Define the block and grid size
     int blockSize = 32;
     int gridSizeTranspose = (hiddenSize * outputs + blockSize - 1) / blockSize;
     int gridSizeDot = (batchSize * hiddenSize + blockSize - 1) / blockSize;
@@ -124,7 +118,6 @@ void compute_W1g(Matrix W1g_dev, Matrix Xb_dev, Matrix Xb_transpose_dev, Matrix 
     int features = Xb_dev.cols;
     int hiddenSize = He_dev.cols;
 
-    // Define the block and grid size
     int blockSize = 32;
     int gridSizeTranspose = (batchSize * features + blockSize - 1) / blockSize;
     int gridSizeDot = (features * hiddenSize + blockSize - 1) / blockSize;
@@ -138,7 +131,6 @@ void compute_b1g(Matrix b1g_dev, Matrix He_dev) {
     int batchSize = He_dev.rows;
     int hiddenSize = He_dev.cols;
 
-    // Define the block and grid size
     int blockSize = 32;
     int gridSize = (hiddenSize + blockSize - 1) / blockSize;
 
@@ -150,7 +142,6 @@ void update_weights(Matrix m, Matrix g, float eta) {
     int rows = m.rows;
     int cols = m.cols;
 
-    // Define the block and grid size
     int blockSize = 32;
     int gridSize = (rows * cols + blockSize - 1) / blockSize;
 
@@ -267,7 +258,7 @@ int main(int argc, char** argv) {
     // Train-test split
     int trainSize = (int)(df.rows * 1.0);   // TODO: For now we use the entire dataset for training
     int testSize = df.rows - trainSize;
-    int features = df.cols - 1;
+    // int features = df.cols - 1;
 
     TrainTestSplit split = train_test_split(df, trainSize, testSize);
 
