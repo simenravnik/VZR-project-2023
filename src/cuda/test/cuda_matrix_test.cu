@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../lib/read.h"
-#include "../lib/matrix.h"
-#include "../lib/helpers.h"
-#include "../lib/cuda_matrix.h"
+#include "../../../lib/read.h"
+#include "../../../lib/matrix.h"
+#include "../../../lib/helpers.h"
+#include "../../../lib/cuda_matrix.h"
 #include "colors.h"
 
 void print_failed(const char* test_name) {
