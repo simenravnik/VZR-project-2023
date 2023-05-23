@@ -133,6 +133,31 @@ void compute_W1g(Matrix W1g_dev, Matrix Xb_dev, Matrix Xb_transpose_dev, Matrix 
     device_dot<<<gridSizeDot, blockSize>>>(Xb_transpose_dev.data, He_dev.data, W1g_dev.data, features, batchSize, hiddenSize);
 }
 
+void compute_b1g(Matrix b1g_dev, Matrix He_dev) {
+
+    int batchSize = He_dev.rows;
+    int hiddenSize = He_dev.cols;
+
+    // Define the block and grid size
+    int blockSize = 32;
+    int gridSize = (hiddenSize + blockSize - 1) / blockSize;
+
+    device_sum<<<gridSize, blockSize>>>(He_dev.data, b1g_dev.data, batchSize, hiddenSize);
+}
+
+void update_weights(Matrix m, Matrix g, float eta) {
+
+    int rows = m.rows;
+    int cols = m.cols;
+
+    // Define the block and grid size
+    int blockSize = 32;
+    int gridSize = (rows * cols + blockSize - 1) / blockSize;
+
+    device_scalar_multiply<<<gridSize, blockSize>>>(g.data, g.data, eta, rows, cols);
+    device_subtract<<<gridSize, blockSize>>>(m.data, g.data, m.data, rows, cols, rows, cols);
+}
+
 MLP_model train_mlp(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
 
     int samples = X.rows;
@@ -191,6 +216,13 @@ MLP_model train_mlp(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize
             compute_b2g(b2g_dev, deltaOutput_dev);    // 1 x outputs
             compute_He(He_dev, deltaOutput_dev, W2_dev, H_dev, ones2_dev);    // batchSize x hiddenSize
             compute_W1g(W1g_dev, Xb_dev, Xb_transpose_dev, He_dev);    // features x hiddenSize
+            compute_b1g(b1g_dev, He_dev);    // 1 x hiddenSize
+
+            // Update weights and biases
+            update_weights(W1_dev, W1g_dev, eta);
+            update_weights(W2_dev, W2g_dev, eta);
+            update_weights(b1_dev, b1g_dev, eta);
+            update_weights(b2_dev, b2g_dev, eta);
 
             H = to_host(H_dev);
             Y_hat = to_host(Y_hat_dev);
@@ -200,16 +232,13 @@ MLP_model train_mlp(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize
             b2g = to_host(b2g_dev);
             He = to_host(He_dev);
             W1g = to_host(W1g_dev);
-
-            print_matrix(W1g);
+            b1g = to_host(b1g_dev);
+            W1 = to_host(W1_dev);
+            W2 = to_host(W2_dev);
+            b1 = to_host(b1_dev);
+            b2 = to_host(b2_dev);
             
-            b1g = sum(He);    // 1 x hiddenSize
-
-            // Update weights and biases
-            W1 = subtract(W1, scalar_multiply(W1g, eta));
-            W2 = subtract(W2, scalar_multiply(W2g, eta));
-            b1 = subtract(b1, scalar_multiply(b1g, eta));
-            b2 = subtract(b2, scalar_multiply(b2g, eta));
+            print_matrix(W1);
 
             if (batch == batchSize)
                 break;
