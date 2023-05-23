@@ -32,7 +32,7 @@ int test_device_add(Matrix A, Matrix B) {
     int blockSize = 32;
     int gridSize = (A_dev.rows * A_dev.cols + blockSize - 1) / blockSize;
 
-    device_add<<<gridSize, blockSize>>>(A_dev.data, B_dev.data, C_dev.data, A_dev.rows, A_dev.cols, B_dev.rows, B_dev.cols);
+    device_add<<<gridSize, blockSize>>>(A_dev.data, B_dev.data, C_dev.data, A_dev.rows, A_dev.cols);
 
     // Copy data back to the host
     Matrix C = to_host(C_dev);
@@ -134,7 +134,7 @@ int test_device_subtract(Matrix A, Matrix B) {
     int blockSize = 32;
     int gridSize = (A_dev.rows * B_dev.cols + blockSize - 1) / blockSize;
 
-    device_subtract<<<gridSize, blockSize>>>(A_dev.data, B_dev.data, C_dev.data, A_dev.rows, A_dev.cols, B_dev.rows, B_dev.cols);
+    device_subtract<<<gridSize, blockSize>>>(A_dev.data, B_dev.data, C_dev.data, A_dev.rows, A_dev.cols);
 
     // Copy data back to the host
     Matrix C = to_host(C_dev);
@@ -171,7 +171,7 @@ int test_device_hadamard(Matrix A, Matrix B) {
     int blockSize = 32;
     int gridSize = (A_dev.rows * B_dev.cols + blockSize - 1) / blockSize;
 
-    device_hadamard<<<gridSize, blockSize>>>(A_dev.data, B_dev.data, C_dev.data, A_dev.rows, A_dev.cols, B_dev.rows, B_dev.cols);
+    device_hadamard<<<gridSize, blockSize>>>(A_dev.data, B_dev.data, C_dev.data, A_dev.rows, A_dev.cols);
 
     // Copy data back to the host
     Matrix C = to_host(C_dev);
@@ -327,13 +327,6 @@ int main(int argc, char** argv) {
     Matrix A = random_matrix(rows_A, cols_A);
     Matrix B = random_matrix(rows_B, cols_B);
     Matrix b = random_matrix(1, cols_A);
-
-    A.data[0] = 1;
-    A.data[1] = 2;
-    A.data[2] = 3;
-    A.data[3] = 4;
-    A.data[4] = 5;
-    A.data[5] = 6;
 
     // Add of A and B
     if (test_device_add(A, b)) {
