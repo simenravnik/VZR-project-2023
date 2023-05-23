@@ -14,7 +14,15 @@
 #include "src/serial/train_mlp_serial.h"
 #include "src/cuda/train_mlp_cuda.h"
 
-#define blockSize 32
+void predict(Matrix X_test, Matrix Y_test, MLP_model model) {
+    // Test the model
+    Matrix H = matrix_tanh(add(dot(X_test, model.W1), model.b1));   // trainSize x hiddenSize
+    Matrix Y_hat = matrix_tanh(add(dot(H, model.W2), model.b2));    // trainSize x classes
+
+    // Calculate accuracy
+    float accuracy = accuracy_score(Y_test, Y_hat);
+    printf("Accuracy: %f\n\n", accuracy);
+}
 
 int main(int argc, char** argv) {
 
@@ -42,16 +50,17 @@ int main(int argc, char** argv) {
     int epochs = 1000;
     float eta = 0.01;
 
-    // Train the model
-    MLP_model model = train_mlp_cuda(split.X_train, split.Y_train, hiddenSize, eta, batchSize, epochs);
+    MLP_model model;
 
-    // Test the model
-    Matrix H = matrix_tanh(add(dot(split.X_train, model.W1), model.b1));   // trainSize x hiddenSize
-    Matrix Y_hat = matrix_tanh(add(dot(H, model.W2), model.b2));    // trainSize x classes
+    // SERIAL
+    model = train_mlp_serial(split.X_train, split.Y_train, hiddenSize, eta, batchSize, epochs);
+    printf("Serial:\n");
+    predict(split.X_train, split.Y_train, model);
 
-    // Calculate accuracy
-    float accuracy = accuracy_score(split.Y_train, Y_hat);
-    printf("Accuracy: %f\n", accuracy);
+    // CUDA
+    model = train_mlp_cuda(split.X_train, split.Y_train, hiddenSize, eta, batchSize, epochs);
+    printf("CUDA:\n");
+    predict(split.X_train, split.Y_train, model);
 
     // Free memory
     free(df.data);
@@ -59,8 +68,6 @@ int main(int argc, char** argv) {
     free_matrix(split.Y_train);
     free_matrix(split.X_test);
     free_matrix(split.Y_test);
-    free_matrix(H);
-    free_matrix(Y_hat);
     free_matrix(model.W1);
     free_matrix(model.W2);
     free_matrix(model.b1);

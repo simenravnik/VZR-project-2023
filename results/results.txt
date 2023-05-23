@@ -1,1 +1,6 @@
+Serial:
 Accuracy: 0.980000
+
+CUDA:
+Accuracy: 0.980000
+
