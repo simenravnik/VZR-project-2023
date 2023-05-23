@@ -1,11 +1,15 @@
+#ifndef CUDA_MATRIX_H
+#define CUDA_MATRIX_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "matrix.h"
 
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#include "matrix_cuda.h"
+#include "helper_cuda.h"
 
 Matrix create_on_device(int rows, int cols) {
     Matrix m_dev = {
@@ -117,3 +121,5 @@ __global__ void device_scalar_multiply(float* A, float* C, float scalar, int row
         C[idx] = A[idx] * scalar;
     }
 }
+
+#endif

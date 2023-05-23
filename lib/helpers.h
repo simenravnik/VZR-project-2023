@@ -1,9 +1,31 @@
+#ifndef HELPERS_H
+#define HELPERS_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "read.h"
+#include "matrix.h"
 
-#include "helpers.h"
+typedef struct TrainTestSplit {
+    Matrix X_train;
+    Matrix X_test;
+    Matrix Y_train;
+    Matrix Y_test;
+} TrainTestSplit;
+
+typedef struct Data {
+    float* X;
+    float* Y;
+} Data;
+
+TrainTestSplit train_test_split(DataFrame df, int trainSize, int testSize);
+Data extract_data(DataFrame df);
+TrainTestSplit split(float* X, float* Y, int samples, int features, int trainSize, int testSize);
+Matrix normalize(Matrix X);
+Matrix one_hot_encode(Matrix Y, int classes);
+float accuracy_score(Matrix y_true, Matrix y_pred);
 
 /*
  * Returns data splitted into train and test
@@ -18,6 +40,7 @@ TrainTestSplit train_test_split(DataFrame df, int trainSize, int testSize) {
 
     return tts;
 }
+
 
 /*
  * Returns data splitted into features and labels
@@ -41,6 +64,7 @@ Data extract_data(DataFrame df) {
     Data data = {X, Y};
     return data;
 }
+
 
 /*
  * Returns data splitted into train and test
@@ -142,3 +166,6 @@ float accuracy_score(Matrix y_true, Matrix y_pred) {
 
     return correct / y_true.rows;
 }
+
+
+#endif

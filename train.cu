@@ -5,10 +5,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "lib/read/read.h"
-#include "lib/helpers/helpers.h"
+#include "lib/read.h"
+#include "lib/matrix.h"
+#include "lib/helpers.h"
+#include "lib/cuda_matrix.h"
+#include "lib/mlp_model.h"
 
 #include "src/serial/train_mlp_serial.h"
+#include "src/cuda/train_mlp_cuda.h"
+
+#define blockSize 32
 
 int main(int argc, char** argv) {
 
@@ -16,9 +22,9 @@ int main(int argc, char** argv) {
     DataFrame df = read_csv("data/iris.data");
 
     // Train-test split
-    int trainSize = (int)(df.rows * 1.0);   // TODO: For now we use the entire dataset for trainingc
+    int trainSize = (int)(df.rows * 1.0);   // TODO: For now we use the entire dataset for training
     int testSize = df.rows - trainSize;
-    int features = df.cols - 1;
+    // int features = df.cols - 1;
 
     TrainTestSplit split = train_test_split(df, trainSize, testSize);
 
@@ -37,7 +43,7 @@ int main(int argc, char** argv) {
     float eta = 0.01;
 
     // Train the model
-    MLP_model model = train_mlp_serial(split.X_train, split.Y_train, hiddenSize, eta, batchSize, epochs);
+    MLP_model model = train_mlp_cuda(split.X_train, split.Y_train, hiddenSize, eta, batchSize, epochs);
 
     // Test the model
     Matrix H = matrix_tanh(add(dot(split.X_train, model.W1), model.b1));   // trainSize x hiddenSize
