@@ -170,6 +170,12 @@ MLP_model train_mlp(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize
     Matrix b1 = random_matrix(1, hiddenSize);
     Matrix b2 = random_matrix(1, outputs);
 
+    // Push weights and biases to the device
+    Matrix W1_dev = to_device(W1);
+    Matrix W2_dev = to_device(W2);
+    Matrix b1_dev = to_device(b1);
+    Matrix b2_dev = to_device(b2);
+
     // Initialize matries for the forward and backward pass
     Matrix H_dev = create_on_device(batchSize, hiddenSize);
     Matrix Y_hat_dev = create_on_device(batchSize, outputs);
@@ -184,8 +190,7 @@ MLP_model train_mlp(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize
     Matrix ones2_dev = to_device(ones(batchSize, hiddenSize));
     Matrix Xb_transpose_dev = create_on_device(features, batchSize);    // Helper matrix for the transpose of Xb
 
-    Matrix Xb, Yb, H, Y_hat, E, deltaOutput, W2g, b2g, He, W1g, b1g;
-
+    Matrix Xb, Yb;
     Matrix Xb_dev, Yb_dev;
 
     // Train the model
@@ -198,12 +203,6 @@ MLP_model train_mlp(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize
 
             Xb_dev = to_device(Xb);
             Yb_dev = to_device(Yb);
-
-            // Push weights and biases to the device
-            Matrix W1_dev = to_device(W1);
-            Matrix W2_dev = to_device(W2);
-            Matrix b1_dev = to_device(b1);
-            Matrix b2_dev = to_device(b2);
 
             // Forward pass
             compute_H(H_dev, Xb_dev, W1_dev, b1_dev);   // batchSize x hiddenSize 
@@ -224,40 +223,37 @@ MLP_model train_mlp(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize
             update_weights(b1_dev, b1g_dev, eta);
             update_weights(b2_dev, b2g_dev, eta);
 
-            H = to_host(H_dev);
-            Y_hat = to_host(Y_hat_dev);
-            E = to_host(E_dev);
-            deltaOutput = to_host(deltaOutput_dev);
-            W2g = to_host(W2g_dev);
-            b2g = to_host(b2g_dev);
-            He = to_host(He_dev);
-            W1g = to_host(W1g_dev);
-            b1g = to_host(b1g_dev);
-            W1 = to_host(W1_dev);
-            W2 = to_host(W2_dev);
-            b1 = to_host(b1_dev);
-            b2 = to_host(b2_dev);
-            
-            print_matrix(W1);
-
-            if (batch == batchSize)
-                break;
+            // Free memory
+            free_matrix(Xb);
+            free_matrix(Yb);
+            free_device_matrix(Xb_dev);
+            free_device_matrix(Yb_dev);
         }
-        break;
     }
 
+    // Push computed weights and biases to the host
+    W1 = to_host(W1_dev);
+    W2 = to_host(W2_dev);
+    b1 = to_host(b1_dev);
+    b2 = to_host(b2_dev);
+
     // Free memory
-    free_matrix(Xb);
-    free_matrix(Yb);
-    free_matrix(H);
-    free_matrix(Y_hat);
-    free_matrix(E);
-    free_matrix(deltaOutput);
-    free_matrix(W2g);
-    free_matrix(b2g);
-    free_matrix(He);
-    free_matrix(W1g);
-    free_matrix(b1g);
+    free_device_matrix(H_dev);
+    free_device_matrix(Y_hat_dev);
+    free_device_matrix(E_dev);
+    free_device_matrix(deltaOutput_dev);
+    free_device_matrix(W2g_dev);
+    free_device_matrix(b2g_dev);
+    free_device_matrix(He_dev);
+    free_device_matrix(W1g_dev);
+    free_device_matrix(b1g_dev);
+    free_device_matrix(ones_dev);
+    free_device_matrix(ones2_dev);
+    free_device_matrix(Xb_transpose_dev);
+    free_device_matrix(W1_dev);
+    free_device_matrix(W2_dev);
+    free_device_matrix(b1_dev);
+    free_device_matrix(b2_dev);
 
     MLP_model model = {W1, W2, b1, b2};
     return model;
