@@ -10,6 +10,7 @@
 #include "lib/helpers/helpers.h"
 #include "lib/matrix/cuda_matrix.h"
 #include "lib/models/mlp_model.h"
+#include "lib/time/cuda_timer.h"
 
 #include "src/serial/train_mlp_serial.h"
 #include "src/cuda/train_mlp_cuda.h"
@@ -51,15 +52,20 @@ int main(int argc, char** argv) {
     float eta = 0.01;
 
     MLP_model model;
+    cudaEvent_t start, stop;
 
     // SERIAL
-    model = train_mlp_serial(split.X_train, split.Y_train, hiddenSize, eta, batchSize, epochs);
     printf("Serial:\n");
+    cuda_start_timer(&start, &stop);
+    model = train_mlp_serial(split.X_train, split.Y_train, hiddenSize, eta, batchSize, epochs);
+    printf("Time: %0.3f milliseconds \n", cuda_stop_timer(&start, &stop));
     predict(split.X_train, split.Y_train, model);
 
     // CUDA
-    model = train_mlp_cuda(split.X_train, split.Y_train, hiddenSize, eta, batchSize, epochs);
     printf("CUDA:\n");
+    cuda_start_timer(&start, &stop);
+    model = train_mlp_cuda(split.X_train, split.Y_train, hiddenSize, eta, batchSize, epochs);
+    printf("Time: %0.3f milliseconds \n", cuda_stop_timer(&start, &stop));
     predict(split.X_train, split.Y_train, model);
 
     // Free memory
