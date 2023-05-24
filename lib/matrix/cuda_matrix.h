@@ -9,7 +9,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#include "helper_cuda.h"
+#include "../helpers/helper_cuda.h"
 
 Matrix create_on_device(int rows, int cols) {
     Matrix m_dev = {

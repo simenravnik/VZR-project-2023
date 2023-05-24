@@ -1,7 +1,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include "matrix.h"
+#include "../matrix/matrix.h"
 
 typedef struct MLP_model {
     Matrix W1;

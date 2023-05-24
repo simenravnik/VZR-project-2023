@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "read.h"
 
 typedef struct DataFrame {
     float *data;

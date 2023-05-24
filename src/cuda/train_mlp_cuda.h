@@ -8,11 +8,11 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#include "../../lib/matrix.h"
-#include "../../lib/cuda_matrix.h"
-#include "../../lib/helpers.h"
-#include "../../lib/helper_cuda.h"
-#include "../../lib/mlp_model.h"
+#include "../../lib/matrix/matrix.h"
+#include "../../lib/matrix/cuda_matrix.h"
+#include "../../lib/helpers/helpers.h"
+#include "../../lib/helpers/helper_cuda.h"
+#include "../../lib/models/mlp_model.h"
 
 void compute_H(Matrix H_dev, Matrix Xb_dev, Matrix W1_dev, Matrix b1_dev);
 void compute_Y_hat(Matrix Y_hat_dev, Matrix H_dev, Matrix W2_dev, Matrix b2_dev);

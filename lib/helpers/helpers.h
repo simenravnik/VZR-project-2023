@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "read.h"
-#include "matrix.h"
+#include "../read/read.h"
+#include "../matrix/matrix.h"
 
 typedef struct TrainTestSplit {
     Matrix X_train;

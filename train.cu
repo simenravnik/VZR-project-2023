@@ -5,11 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "lib/read.h"
-#include "lib/matrix.h"
-#include "lib/helpers.h"
-#include "lib/cuda_matrix.h"
-#include "lib/mlp_model.h"
+#include "lib/read/read.h"
+#include "lib/matrix/matrix.h"
+#include "lib/helpers/helpers.h"
+#include "lib/matrix/cuda_matrix.h"
+#include "lib/models/mlp_model.h"
 
 #include "src/serial/train_mlp_serial.h"
 #include "src/cuda/train_mlp_cuda.h"
