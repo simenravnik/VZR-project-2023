@@ -1,4 +1,38 @@
-# Neural network training
+# MLP using serial, CUDA, OpenMP and MPI
+
+## Compile and run
+
+```
+./run.sh
+```
+
+## Project structure
+
+```
+.
+├── lib
+│   ├── helpers
+│   │   ├── helpers.h
+│   │   └── helper_cuda.h
+│   ├── matrix
+│   │   ├── matrix.h
+│   │   └── cuda_matrix.h
+│   ├── models
+│   │   └── mlp_model.h
+│   └── read
+│       └── read.h
+├── src
+│   ├── cuda
+|   |   ├── test
+|   |   └── train_mlp_cuda.h
+│   ├── serial
+|   |   ├── train_mlp_serial.c
+|   |   └── train_mlp_serial.h
+│   └── python
+|       └── train.py
+├── train.cu
+└── run.sh
+```
 
 
 ## Pseudocode
