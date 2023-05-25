@@ -77,7 +77,7 @@ void compute_delta_output(Matrix deltaOutput_dev, Matrix E_dev, Matrix ones_dev,
     device_hadamard<<<gridSize, blockSize>>>(E_dev.data, deltaOutput_dev.data, deltaOutput_dev.data, batchSize, outputs);
 }
 
-void compute_w2g(Matrix W2g_dev, Matrix H_dev, Matrix deltaOutput_dev) {
+void compute_w2g(Matrix W2g_dev, Matrix H_dev, Matrix H_transpose_dev, Matrix deltaOutput_dev) {
 
     int batchSize = H_dev.rows;
     int hiddenSize = H_dev.cols;
@@ -86,8 +86,8 @@ void compute_w2g(Matrix W2g_dev, Matrix H_dev, Matrix deltaOutput_dev) {
     int gridSizeTranspose = (batchSize * hiddenSize + blockSize - 1) / blockSize;
     int gridSizeDot = (hiddenSize * outputs + blockSize - 1) / blockSize;
 
-    device_transpose<<<gridSizeTranspose, blockSize>>>(H_dev.data, W2g_dev.data, batchSize, hiddenSize);
-    device_dot<<<gridSizeDot, blockSize>>>(W2g_dev.data, deltaOutput_dev.data, W2g_dev.data, hiddenSize, batchSize, outputs);
+    device_transpose<<<gridSizeTranspose, blockSize>>>(H_dev.data, H_transpose_dev.data, batchSize, hiddenSize);
+    device_dot<<<gridSizeDot, blockSize>>>(H_transpose_dev.data, deltaOutput_dev.data, W2g_dev.data, hiddenSize, batchSize, outputs);
 }
 
 void compute_b2g(Matrix b2g_dev, Matrix deltaOutput_dev) {
@@ -100,7 +100,7 @@ void compute_b2g(Matrix b2g_dev, Matrix deltaOutput_dev) {
     device_sum<<<gridSize, blockSize>>>(deltaOutput_dev.data, b2g_dev.data, batchSize, outputs);
 }
 
-void compute_He(Matrix He_dev, Matrix deltaOutput_dev, Matrix W2_dev, Matrix H_dev, Matrix ones2_dev) {
+void compute_He(Matrix He_dev, Matrix deltaOutput_dev, Matrix W2_dev, Matrix W2_transpose_dev, Matrix H_dev, Matrix ones2_dev) {
 
     int batchSize = deltaOutput_dev.rows;
     int outputs = deltaOutput_dev.cols;
@@ -109,8 +109,8 @@ void compute_He(Matrix He_dev, Matrix deltaOutput_dev, Matrix W2_dev, Matrix H_d
     int gridSizeTranspose = (hiddenSize * outputs + blockSize - 1) / blockSize;
     int gridSizeDot = (batchSize * hiddenSize + blockSize - 1) / blockSize;
 
-    device_transpose<<<gridSizeTranspose, blockSize>>>(W2_dev.data, He_dev.data, hiddenSize, outputs);
-    device_dot<<<gridSizeDot, blockSize>>>(deltaOutput_dev.data, He_dev.data, He_dev.data, batchSize, outputs, hiddenSize);
+    device_transpose<<<gridSizeTranspose, blockSize>>>(W2_dev.data, W2_transpose_dev.data, hiddenSize, outputs);
+    device_dot<<<gridSizeDot, blockSize>>>(deltaOutput_dev.data, W2_transpose_dev.data, He_dev.data, batchSize, outputs, hiddenSize);
 
     device_square<<<gridSizeDot, blockSize>>>(H_dev.data, H_dev.data, batchSize, hiddenSize);
     device_subtract<<<gridSizeDot, blockSize>>>(ones2_dev.data, H_dev.data, H_dev.data, batchSize, hiddenSize);
@@ -181,6 +181,8 @@ MLP_model train_mlp_cuda(Matrix X, Matrix Y, int hiddenSize, float eta, int batc
     Matrix b1g_dev = create_on_device(1, hiddenSize);
     Matrix ones_dev = to_device(ones(batchSize, outputs));
     Matrix ones2_dev = to_device(ones(batchSize, hiddenSize));
+    Matrix H_transpose_dev = create_on_device(hiddenSize, batchSize);  // Helper matrix for the transpose of H
+    Matrix W2_transpose_dev = create_on_device(outputs, hiddenSize);    // Helper matrix for the transpose of W2
     Matrix Xb_transpose_dev = create_on_device(features, batchSize);    // Helper matrix for the transpose of Xb
 
     Matrix Xb, Yb;
@@ -204,9 +206,9 @@ MLP_model train_mlp_cuda(Matrix X, Matrix Y, int hiddenSize, float eta, int batc
             // Backward pass
             compute_E(E_dev, Y_hat_dev, Yb_dev);    // batchSize x outputs
             compute_delta_output(deltaOutput_dev, E_dev, ones_dev, Y_hat_dev);  // batchSize x outputs
-            compute_w2g(W2g_dev, H_dev, deltaOutput_dev);    // hiddenSize x outputs
+            compute_w2g(W2g_dev, H_dev, H_transpose_dev, deltaOutput_dev);    // hiddenSize x outputs
             compute_b2g(b2g_dev, deltaOutput_dev);    // 1 x outputs
-            compute_He(He_dev, deltaOutput_dev, W2_dev, H_dev, ones2_dev);    // batchSize x hiddenSize
+            compute_He(He_dev, deltaOutput_dev, W2_dev, W2_transpose_dev, H_dev, ones2_dev);    // batchSize x hiddenSize
             compute_W1g(W1g_dev, Xb_dev, Xb_transpose_dev, He_dev);    // features x hiddenSize
             compute_b1g(b1g_dev, He_dev);    // 1 x hiddenSize
 
@@ -242,6 +244,8 @@ MLP_model train_mlp_cuda(Matrix X, Matrix Y, int hiddenSize, float eta, int batc
     free_device_matrix(b1g_dev);
     free_device_matrix(ones_dev);
     free_device_matrix(ones2_dev);
+    free_device_matrix(H_transpose_dev);
+    free_device_matrix(W2_transpose_dev);
     free_device_matrix(Xb_transpose_dev);
     free_device_matrix(W1_dev);
     free_device_matrix(W2_dev);
