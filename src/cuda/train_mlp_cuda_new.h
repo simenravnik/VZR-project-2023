@@ -23,7 +23,7 @@ int calculate_block_size(int number) {
     int closest = targets[0]; // Initialize closest to the first target
     
     for (int i = 1; i < numTargets; i++) {
-        if (abs(targets[i] - number) < abs(closest - number)) {
+        if (targets[i] > number && abs(targets[i] - number) < abs(closest - number)) {
             closest = targets[i]; // Update closest if a closer target is found
         }
     }
