@@ -15,7 +15,21 @@
 #include "../../lib/helpers/helper_cuda.h"
 #include "../../lib/models/mlp_model.h"
 
-#define BS 32
+int calculate_block_size(int number) {
+    // Array of target values
+    int targets[] = {32, 64, 128, 256, 512, 1024};
+    int numTargets = sizeof(targets) / sizeof(targets[0]);
+    
+    int closest = targets[0]; // Initialize closest to the first target
+    
+    for (int i = 1; i < numTargets; i++) {
+        if (abs(targets[i] - number) < abs(closest - number)) {
+            closest = targets[i]; // Update closest if a closer target is found
+        }
+    }
+
+    return closest;
+}
 
 MLP_model train_mlp_cuda_new(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
 
@@ -54,6 +68,19 @@ MLP_model train_mlp_cuda_new(Matrix X, Matrix Y, int hiddenSize, float eta, int 
     Matrix Xb, Yb;
     Matrix Xb_dev, Yb_dev;
 
+    int maxThreadsNeeded = MAX(MAX(MAX(MAX(batchSize * hiddenSize, batchSize * outputs), hiddenSize * outputs), batchSize * features), features * hiddenSize);
+
+    int BS = calculate_block_size(maxThreadsNeeded); // BLOCKSIZE = Round up to the nearest multiple of 32
+    int GS = (maxThreadsNeeded + BS - 1) / BS; // GRIDSIZE = 1
+
+    printf("BlockSize = %d, GridSize = %d\n", BS, GS);
+
+    if (maxThreadsNeeded > 1024) {
+        printf("This model comes with a limitation of 1024 threads per block\n");
+        printf("BlockSize too large, threads needed = %d\n", maxThreadsNeeded);
+        exit(1);
+    }
+
     // Train the model
     for (int epoch = 0; epoch < epochs; epoch++) {
         // TODO: fix to encapsulate the last batch if samples % batchSize != 0
@@ -65,43 +92,19 @@ MLP_model train_mlp_cuda_new(Matrix X, Matrix Y, int hiddenSize, float eta, int 
             Xb_dev = to_device(Xb);
             Yb_dev = to_device(Yb);
 
-            int maxThreadsNeeded = MAX(MAX(MAX(MAX(batchSize * hiddenSize, batchSize * outputs), hiddenSize * outputs), batchSize * features), features * hiddenSize);
-            printf("maxThreadsNeeded: %d\n", maxThreadsNeeded);
-            int GS = (maxThreadsNeeded + BS - 1) / BS;
-            printf("gridSize: %d\n", GS);
-
-            train_on_gpu<<<GS, BS>>>(W1_dev.data, W2_dev.data, b1_dev.data, b2_dev.data, Xb_dev.data, Yb_dev.data,
-                                                  H_dev.data, Y_hat_dev.data, E_dev.data, deltaOutput_dev.data, W2g_dev.data, b2g_dev.data, He_dev.data, W1g_dev.data, b1g_dev.data,
-                                                  ones_dev.data, ones2_dev.data, H_transpose_dev.data, W2_transpose_dev.data, Xb_transpose_dev.data, batchSize, features, hiddenSize, outputs, eta, maxThreadsNeeded);
-
-            Matrix H = to_host(H_dev);
-            Matrix Y_hat = to_host(Y_hat_dev);
-            Matrix E = to_host(E_dev);
-            Matrix deltaOutput = to_host(deltaOutput_dev);
-            Matrix W2g = to_host(W2g_dev);
-            Matrix b2g = to_host(b2g_dev);
-            Matrix He = to_host(He_dev);
-            Matrix W1g = to_host(W1g_dev);
-            Matrix b1g = to_host(b1g_dev);
-
-            print_matrix(H);
-            print_matrix(Y_hat);
-            print_matrix(E);
-            print_matrix(deltaOutput);
-            print_matrix(W2g);
-            print_matrix(b2g);
-            print_matrix(He);
-            print_matrix(W1g);
-            print_matrix(b1g);
+            train_on_gpu<<<GS, BS>>>(
+                W1_dev.data, W2_dev.data, b1_dev.data, b2_dev.data, Xb_dev.data, Yb_dev.data,
+                H_dev.data, Y_hat_dev.data, E_dev.data, deltaOutput_dev.data, W2g_dev.data, b2g_dev.data, He_dev.data, W1g_dev.data, b1g_dev.data,
+                ones_dev.data, ones2_dev.data, H_transpose_dev.data, W2_transpose_dev.data, Xb_transpose_dev.data, c
+                batchSize, features, hiddenSize, outputs, eta, maxThreadsNeeded
+            );
 
             // Free memory
             free_matrix(Xb);
             free_matrix(Yb);
             free_device_matrix(Xb_dev);
             free_device_matrix(Yb_dev);
-            break;
         }
-        break;
     }
 
     // Push computed weights and biases to the host

@@ -169,10 +169,6 @@ __global__ void train_on_gpu(float* W1_dev, float* W2_dev, float* b1_dev, float*
 
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (idx == maxThreadNeeded - 1) {
-        printf("Max thread needed: %d\n", idx);
-    }
-
     // Forward pass
     cuda_compute_H(idx, W1_dev, b1_dev, Xb_dev, H_dev, batchSize, features, hiddenSize);
     cuda_compute_Y_hat(idx, H_dev, W2_dev, Y_hat_dev, b2_dev, batchSize, hiddenSize, outputs);
