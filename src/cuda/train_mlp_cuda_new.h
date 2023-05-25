@@ -95,7 +95,7 @@ MLP_model train_mlp_cuda_new(Matrix X, Matrix Y, int hiddenSize, float eta, int 
             train_on_gpu<<<GS, BS>>>(
                 W1_dev.data, W2_dev.data, b1_dev.data, b2_dev.data, Xb_dev.data, Yb_dev.data,
                 H_dev.data, Y_hat_dev.data, E_dev.data, deltaOutput_dev.data, W2g_dev.data, b2g_dev.data, He_dev.data, W1g_dev.data, b1g_dev.data,
-                ones_dev.data, ones2_dev.data, H_transpose_dev.data, W2_transpose_dev.data, Xb_transpose_dev.data, c
+                ones_dev.data, ones2_dev.data, H_transpose_dev.data, W2_transpose_dev.data, Xb_transpose_dev.data,
                 batchSize, features, hiddenSize, outputs, eta, maxThreadsNeeded
             );
 
