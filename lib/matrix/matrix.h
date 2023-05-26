@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 typedef struct Matrix {
     float* data;
@@ -41,6 +42,7 @@ void free_matrix(Matrix mat) {
 }
 
 Matrix random_matrix(int rows, int cols) {
+    srand(1);  // Replace this with srand(time(0)); if you want to randomize the seed
     Matrix mat = allocate_matrix(rows, cols);
     for (int i = 0; i < rows * cols; i++) {
         mat.data[i] = (float) rand() / RAND_MAX;
