@@ -1,3 +1,4 @@
 YET TO BE IMPLEMENTED
-Accuracy: 0.028143
+Time: 42.663 milliseconds 
+Accuracy: 0.042943
 

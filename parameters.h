@@ -1,7 +1,7 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
-const char* FILEPATH = "data/winequality-red.csv";
+const char* FILEPATH = "data/winequalityN.csv";
 int CLASSES = 10;
 
 int HIDDEN_SIZE = 50;

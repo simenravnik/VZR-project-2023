@@ -5,7 +5,7 @@ module load CUDA
 # Fix if you want to run on NSC
 
 # SERIAL
-gcc -O2 -lm -o train_serial.bin src/serial/train.c
+gcc -O2 -lm -fopenmp -o train_serial.bin src/serial/train.c
 srun --reservation=fri-vr --partition=gpu train_serial.bin > results/Serial.txt
 
 # OPENMP
@@ -15,7 +15,7 @@ srun --reservation=fri-vr --partition=gpu --cpus-per-task=4 train_openmp.bin > r
 # CUDA
 nvcc -O2 -lm -o train_cuda.bin src/cuda/train.cu
 srun --reservation=fri-vr --partition=gpu --gpus=1 train_cuda.bin cuda > results/CUDA.txt
-srun --reservation=fri-vr --partition=gpu --gpus=1 train_cuda.bin new > results/CUDA_NEW.txt
+srun --reservation=fri-vr --partition=gpu --gpus=1 train_cuda.bin new > results/CUDA_SINGLE_KERNEL.txt
 
 # MPI
 # We have to compile MPI using srun (ARNES specific) + run it using srun manually

@@ -30,10 +30,10 @@ int main(int argc, char** argv) {
 
     // Train the model
     if (strcmp(argv[1], "cuda") == 0) {
-        printf("CUDA...\n");
+        printf("CUDA\n");
         model = train_mlp_cuda(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
     } else if (strcmp(argv[1], "new") == 0) {
-        printf("CUDA_NEW...\n");
+        printf("CUDA SINGLE KERNEL\n");
         model = train_mlp_cuda_new(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
     } else {
         printf("Invalid argument. Please use either 'serial' or 'cuda'.\n");

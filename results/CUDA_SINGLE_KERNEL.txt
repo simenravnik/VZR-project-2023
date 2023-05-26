@@ -1,0 +1,5 @@
+CUDA SINGLE KERNEL
+BlockSize = 1024, GridSize = 1
+Time: 2320.721 milliseconds 
+Accuracy: 0.545944
+
