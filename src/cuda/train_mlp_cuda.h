@@ -27,7 +27,7 @@ void update_weights(Matrix m, Matrix g, float eta);
 
 MLP_model train_mlp_cuda(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs);
 
-#define blockSize 32
+#define blockSize 256
 
 void compute_H(Matrix H_dev, Matrix Xb_dev, Matrix W1_dev, Matrix b1_dev) {
 
