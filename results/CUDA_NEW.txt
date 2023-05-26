@@ -1,3 +1,5 @@
-Time: 1005.750 milliseconds 
-Accuracy: 0.649781
+CUDA_NEW...
+BlockSize = 1024, GridSize = 1
+Time: 669.122 milliseconds 
+Accuracy: 0.643527
 

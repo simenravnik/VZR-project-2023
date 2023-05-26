@@ -1,3 +1,2 @@
-Time: 2062.753 milliseconds 
-Accuracy: 0.643527
+Accuracy: 0.649781
 
