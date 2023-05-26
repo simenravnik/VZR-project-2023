@@ -12,14 +12,16 @@
 #include "../../lib/helpers/helpers.h"
 #include "../../lib/models/mlp_model.h"
 
-#include "train_mlp_serial.h"
+#include "train_mlp_openmp.h"
 
 int main(int argc, char** argv) {
 
     // Prepare dataset
     TrainTestSplit split = prepare_dataset(FILEPATH, CLASSES);
 
-    MLP_model model = train_mlp_serial(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
+    printf("YET TO BE IMPLEMENTED\n");
+
+    MLP_model model = train_mlp_openmp(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
 
     // Test the model
     float accuracy = predict(split.X_train, split.Y_train, model);
