@@ -1,4 +1,5 @@
 CUDA
-Time: 6808.360 milliseconds 
+Time: 6767.255 milliseconds 
+Training set used for testing:
 Accuracy: 0.545944
 

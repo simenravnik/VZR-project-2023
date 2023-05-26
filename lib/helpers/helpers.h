@@ -21,7 +21,7 @@ typedef struct Data {
     float* Y;
 } Data;
 
-TrainTestSplit prepare_dataset(const char* filepath, int classes);
+TrainTestSplit prepare_dataset(const char* filepath, int classes, float trainSizePercentage);
 TrainTestSplit train_test_split(DataFrame df, int trainSize, int testSize);
 Data extract_data(DataFrame df);
 TrainTestSplit split(float* X, float* Y, int samples, int features, int trainSize, int testSize);
@@ -32,12 +32,12 @@ float predict(Matrix X_test, Matrix Y_test, MLP_model model);
 void free_split(TrainTestSplit split);
 void free_model(MLP_model model);
 
-TrainTestSplit prepare_dataset(const char* filepath, int classes) {
+TrainTestSplit prepare_dataset(const char* filepath, int classes, float trainSizePercentage) {
     // Read data
     DataFrame df = read_csv(filepath);
 
     // Train-test split
-    int trainSize = (int)(df.rows * 1.0);   // TODO: For now we use the entire dataset for training
+    int trainSize = (int)(df.rows * trainSizePercentage);   // TODO: For now we use the entire dataset for training
     int testSize = df.rows - trainSize;
     // int features = df.cols - 1;
 

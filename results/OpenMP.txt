@@ -1,4 +1,5 @@
 YET TO BE IMPLEMENTED
-Time: 42.663 milliseconds 
+Time: 43.014 milliseconds 
+Training set used for testing:
 Accuracy: 0.042943
 

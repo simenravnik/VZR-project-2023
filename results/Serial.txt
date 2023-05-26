@@ -1,3 +1,4 @@
-Time: 3231.297 milliseconds 
+Time: 3337.738 milliseconds 
+Training set used for testing:
 Accuracy: 0.553948
 

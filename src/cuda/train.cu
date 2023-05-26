@@ -20,7 +20,7 @@
 int main(int argc, char** argv) {
 
     // Prepare dataset
-    TrainTestSplit split = prepare_dataset(FILEPATH, CLASSES);
+    TrainTestSplit split = prepare_dataset(FILEPATH, CLASSES, TRAIN_SIZE_PERCENTAGE);
 
     MLP_model model;
     
@@ -44,7 +44,14 @@ int main(int argc, char** argv) {
     printf("Time: %0.3f milliseconds \n", cuda_stop_timer(&start, &stop));
 
     // Test the model
-    float accuracy = predict(split.X_train, split.Y_train, model);
+    float accuracy;
+    if (TRAIN_SIZE_PERCENTAGE == 1.0) {
+        // Test on training set
+        printf("Training set used for testing\n");
+        accuracy = predict(split.X_train, split.Y_train, model);
+    } else {
+        accuracy = predict(split.X_test, split.Y_test, model);
+    }
     printf("Accuracy: %f\n\n", accuracy);
 
     // Free memory

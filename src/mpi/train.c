@@ -17,14 +17,21 @@
 int main(int argc, char** argv) {
 
     // Prepare dataset
-    TrainTestSplit split = prepare_dataset(FILEPATH, CLASSES);
+    TrainTestSplit split = prepare_dataset(FILEPATH, CLASSES, TRAIN_SIZE_PERCENTAGE);
 
     printf("YET TO BE IMPLEMENTED\n");
 
     MLP_model model = train_mlp_mpi(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
 
     // Test the model
-    float accuracy = predict(split.X_train, split.Y_train, model);
+    float accuracy;
+    if (TRAIN_SIZE_PERCENTAGE == 1.0) {
+        // Test on training set
+        printf("Training set used for testing\n");
+        accuracy = predict(split.X_train, split.Y_train, model);
+    } else {
+        accuracy = predict(split.X_test, split.Y_test, model);
+    }
     printf("Accuracy: %f\n\n", accuracy);
 
     // Free memory
