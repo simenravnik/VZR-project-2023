@@ -1,4 +1,4 @@
 CUDA...
-Time: 2052.072 milliseconds 
+Time: 2057.061 milliseconds 
 Accuracy: 0.666667
 
