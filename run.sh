@@ -10,7 +10,7 @@ srun --reservation=fri-vr --partition=gpu train_serial.bin > results/Serial.txt
 
 # OPENMP
 gcc -O2 -lm -fopenmp -o train_openmp.bin src/openmp/train.c
-srun --reservation=fri-vr --partition=gpu --cpus-per-task=4 train_openmp.bin > results/OpenMP.txt
+srun --reservation=fri-vr --partition=gpu --cpus-per-task=8 train_openmp.bin > results/OpenMP.txt
 
 # CUDA
 nvcc -O2 -lm -o train_cuda.bin src/cuda/train.cu

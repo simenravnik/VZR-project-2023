@@ -20,8 +20,6 @@ int main(int argc, char** argv) {
     // Prepare dataset
     TrainTestSplit split = prepare_dataset(FILEPATH, CLASSES, TRAIN_SIZE_PERCENTAGE);
 
-    printf("YET TO BE IMPLEMENTED\n");
-
     double elapsed = omp_get_wtime();
     MLP_model model = train_mlp_openmp(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
     elapsed = omp_get_wtime() - elapsed;
