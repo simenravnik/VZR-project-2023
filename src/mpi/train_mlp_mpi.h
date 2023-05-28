@@ -8,64 +8,65 @@
 
 #include "../../lib/matrix/matrix.h"
 #include "../../lib/matrix/matrix_mpi.h"
+#include "../../lib/matrix/matrix_new.h"
 #include "../../lib/models/mlp_model.h"
 
-void mpi_compute_H(Matrix H, Matrix Xb, Matrix W1, Matrix b1) {
-    dot_mpi(Xb, W1, H);
-    add_mpi(H, b1);
-    matrix_tanh_mpi(H);
+void mpi_compute_H(Matrix H, Matrix Xb, Matrix W1, Matrix b1, int rank, int num_procs) {
+    dot_new(Xb, W1, H);
+    add_new(H, b1);
+    matrix_tanh_new(H);
 }
 
-void mpi_compute_Y_hat(Matrix Y_hat, Matrix H, Matrix W2, Matrix b2) {
-    dot_mpi(H, W2, Y_hat);
-    add_mpi(Y_hat, b2);
-    matrix_tanh_mpi(Y_hat);
+void mpi_compute_Y_hat(Matrix Y_hat, Matrix H, Matrix W2, Matrix b2, int rank, int num_procs) {
+    dot_new(H, W2, Y_hat);
+    add_new(Y_hat, b2);
+    matrix_tanh_new(Y_hat);
 }
 
-void mpi_compute_E(Matrix E, Matrix Y_hat, Matrix Yb) {
-    subtract_mpi(Y_hat, Yb, E);
+void mpi_compute_E(Matrix E, Matrix Y_hat, Matrix Yb, int rank, int num_procs) {
+    subtract_new(Y_hat, Yb, E);
 }
 
-void mpi_compute_delta_output(Matrix deltaOutput, Matrix E, Matrix Y_hat, Matrix ones_matrix) {
-    square_mpi(Y_hat);
-    subtract_mpi(ones_matrix, Y_hat, Y_hat);
-    hadamard_mpi(E, Y_hat, deltaOutput);
+void mpi_compute_delta_output(Matrix deltaOutput, Matrix E, Matrix Y_hat, Matrix ones_matrix, int rank, int num_procs) {
+    square_new(Y_hat);
+    subtract_new(ones_matrix, Y_hat, Y_hat);
+    hadamard_new(E, Y_hat, deltaOutput);
 }
 
-void mpi_compute_W2g(Matrix W2g, Matrix H, Matrix H_tranpose, Matrix deltaOutput) {
-    transpose_mpi(H, H_tranpose);
-    dot_mpi(H_tranpose, deltaOutput, W2g);
+void mpi_compute_W2g(Matrix W2g, Matrix H, Matrix H_tranpose, Matrix deltaOutput, int rank, int num_procs) {
+    transpose_new(H, H_tranpose);
+    dot_new(H_tranpose, deltaOutput, W2g);
 }
 
-void mpi_compute_b2g(Matrix b2g, Matrix deltaOutput) {
-    sum_mpi(deltaOutput, b2g);
+void mpi_compute_b2g(Matrix b2g, Matrix deltaOutput, int rank, int num_procs) {
+    sum_new(deltaOutput, b2g);
 }
 
-void mpi_compute_He(Matrix He, Matrix deltaOutput, Matrix W2, Matrix W2_transpose, Matrix H, Matrix ones2_matrix) {
-    transpose_mpi(W2, W2_transpose);
-    dot_mpi(deltaOutput, W2_transpose, He);
-    square_mpi(H);
-    subtract_mpi(ones2_matrix, H, H);
-    hadamard_mpi(He, H, He);
+void mpi_compute_He(Matrix He, Matrix deltaOutput, Matrix W2, Matrix W2_transpose, Matrix H, Matrix ones2_matrix, int rank, int num_procs) {
+    transpose_new(W2, W2_transpose);
+    dot_new(deltaOutput, W2_transpose, He);
+    square_new(H);
+    subtract_new(ones2_matrix, H, H);
+    hadamard_new(He, H, He);
 }
 
-void mpi_compute_W1g(Matrix W1g, Matrix Xb, Matrix Xb_transpose, Matrix He) {
-    transpose_mpi(Xb, Xb_transpose);
-    dot_mpi(Xb_transpose, He, W1g);
+void mpi_compute_W1g(Matrix W1g, Matrix Xb, Matrix Xb_transpose, Matrix He, int rank, int num_procs) {
+    transpose_new(Xb, Xb_transpose);
+    dot_new(Xb_transpose, He, W1g);
 }
 
-void mpi_compute_b1g(Matrix b1g, Matrix He) {
-    sum_mpi(He, b1g);
+void mpi_compute_b1g(Matrix b1g, Matrix He, int rank, int num_procs) {
+    sum_new(He, b1g);
 }
 
-void mpi_update_weights(Matrix m, Matrix g, float eta) {
-    scalar_multiply_mpi(g, eta);
-    subtract_mpi(m, g, m);
+void mpi_update_weights(Matrix m, Matrix g, float eta, int rank, int num_procs) {
+    scalar_multiply_new(g, eta);
+    subtract_new(m, g, m);
 }
 
-MLP_model train_mlp_mpi(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs);
+MLP_model train_mlp_mpi(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs, int rank, int num_procs);
 
-MLP_model train_mlp_mpi(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
+MLP_model train_mlp_mpi(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs, int rank, int num_procs) {
 
     int samples = X.rows;
     int features = X.cols;
@@ -101,23 +102,23 @@ MLP_model train_mlp_mpi(Matrix X, Matrix Y, int hiddenSize, float eta, int batch
             Yb = slice_matrix(Y, batch, batch + batchSize, 0, outputs);    // batchSize x outputs
 
             // Forward pass
-            mpi_compute_H(H, Xb, W1, b1);   // batchSize x hiddenSize
-            mpi_compute_Y_hat(Y_hat, H, W2, b2);    // batchSize x outputs
+            mpi_compute_H(H, Xb, W1, b1, rank, num_procs);   // batchSize x hiddenSize
+            mpi_compute_Y_hat(Y_hat, H, W2, b2, rank, num_procs);    // batchSize x outputs
 
             // Backward pass
-            mpi_compute_E(E, Y_hat, Yb);    // batchSize x outputs
-            mpi_compute_delta_output(deltaOutput, E, Y_hat, ones_matrix);   // batchSize x outputs
-            mpi_compute_W2g(W2g, H, H_transpose, deltaOutput);    // hiddenSize x outputs
-            mpi_compute_b2g(b2g, deltaOutput);    // 1 x outputs
-            mpi_compute_He(He, deltaOutput, W2, W2_transpose, H, ones2_matrix);   // batchSize x hiddenSize
-            mpi_compute_W1g(W1g, Xb, Xb_transpose, He);    // features x hiddenSize
-            mpi_compute_b1g(b1g, He);    // 1 x hiddenSize
+            mpi_compute_E(E, Y_hat, Yb, rank, num_procs);    // batchSize x outputs
+            mpi_compute_delta_output(deltaOutput, E, Y_hat, ones_matrix, rank, num_procs);   // batchSize x outputs
+            mpi_compute_W2g(W2g, H, H_transpose, deltaOutput, rank, num_procs);    // hiddenSize x outputs
+            mpi_compute_b2g(b2g, deltaOutput, rank, num_procs);    // 1 x outputs
+            mpi_compute_He(He, deltaOutput, W2, W2_transpose, H, ones2_matrix, rank, num_procs);   // batchSize x hiddenSize
+            mpi_compute_W1g(W1g, Xb, Xb_transpose, He, rank, num_procs);    // features x hiddenSize
+            mpi_compute_b1g(b1g, He, rank, num_procs);    // 1 x hiddenSize
 
             // Update weights and biases
-            mpi_update_weights(W1, W1g, eta);
-            mpi_update_weights(W2, W2g, eta);
-            mpi_update_weights(b1, b1g, eta);
-            mpi_update_weights(b2, b2g, eta);
+            mpi_update_weights(W1, W1g, eta, rank, num_procs);
+            mpi_update_weights(W2, W2g, eta, rank, num_procs);
+            mpi_update_weights(b1, b1g, eta, rank, num_procs);
+            mpi_update_weights(b2, b2g, eta, rank, num_procs);
 
             // Free memory
             free_matrix(Xb);

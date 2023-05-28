@@ -1,4 +1,16 @@
 YET TO BE IMPLEMENTED
 Training set used for testing
-Accuracy: 0.042943
+Accuracy: 0.553948
+
+YET TO BE IMPLEMENTED
+Training set used for testing
+Accuracy: 0.553948
+
+YET TO BE IMPLEMENTED
+Training set used for testing
+Accuracy: 0.553948
+
+YET TO BE IMPLEMENTED
+Training set used for testing
+Accuracy: 0.553948
 

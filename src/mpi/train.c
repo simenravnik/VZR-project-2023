@@ -24,29 +24,27 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (rank == 0) {
-        // Prepare dataset
-        TrainTestSplit split = prepare_dataset(FILEPATH, CLASSES, TRAIN_SIZE_PERCENTAGE);
+    // Prepare dataset
+    TrainTestSplit split = prepare_dataset(FILEPATH, CLASSES, TRAIN_SIZE_PERCENTAGE);
 
-        printf("YET TO BE IMPLEMENTED\n");
+    printf("YET TO BE IMPLEMENTED\n");
 
-        MLP_model model = train_mlp_mpi(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
+    MLP_model model = train_mlp_mpi(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS, rank, num_procs);
 
-        // Test the model
-        float accuracy;
-        if (TRAIN_SIZE_PERCENTAGE == 1.0) {
-            // Test on training set
-            printf("Training set used for testing\n");
-            accuracy = predict(split.X_train, split.Y_train, model);
-        } else {
-            accuracy = predict(split.X_test, split.Y_test, model);
-        }
-        printf("Accuracy: %f\n\n", accuracy);
-
-        // Free memory
-        free_split(split);
-        free_model(model);  
+    // Test the model
+    float accuracy;
+    if (TRAIN_SIZE_PERCENTAGE == 1.0) {
+        // Test on training set
+        printf("Training set used for testing\n");
+        accuracy = predict(split.X_train, split.Y_train, model);
+    } else {
+        accuracy = predict(split.X_test, split.Y_test, model);
     }
+    printf("Accuracy: %f\n\n", accuracy);
+
+    // Free memory
+    free_split(split);
+    free_model(model);  
 
     MPI_Finalize();
     return 0;
