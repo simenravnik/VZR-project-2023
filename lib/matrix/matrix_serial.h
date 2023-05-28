@@ -7,17 +7,17 @@
 #include <math.h>
 #include "matrix.h"
 
-void dot_new(Matrix mat1, Matrix mat2, Matrix product);
-void add_new(Matrix mat1, Matrix mat2);
-void subtract_new(Matrix mat1, Matrix mat2, Matrix difference);
-void hadamard_new(Matrix mat1, Matrix mat2, Matrix product);
-void transpose_new(Matrix mat, Matrix trans);
-void sum_new(Matrix mat, Matrix sum);
-void square_new(Matrix mat);
-void matrix_tanh_new(Matrix mat);
-void scalar_multiply_new(Matrix mat, float scalar);
+void dot_serial(Matrix mat1, Matrix mat2, Matrix product);
+void add_serial(Matrix mat1, Matrix mat2);
+void subtract_serial(Matrix mat1, Matrix mat2, Matrix difference);
+void hadamard_serial(Matrix mat1, Matrix mat2, Matrix product);
+void transpose_serial(Matrix mat, Matrix trans);
+void sum_serial(Matrix mat, Matrix sum);
+void square_serial(Matrix mat);
+void matrix_tanh_serial(Matrix mat);
+void scalar_multiply_serial(Matrix mat, float scalar);
 
-void dot_new(Matrix mat1, Matrix mat2, Matrix product) {
+void dot_serial(Matrix mat1, Matrix mat2, Matrix product) {
     if (mat1.cols != mat2.rows) {
         printf("Error: Matrix dimensions do not match for dot product\n");
     }
@@ -38,31 +38,31 @@ void dot_new(Matrix mat1, Matrix mat2, Matrix product) {
  * 
  * Do not use for matrix addition
 */
-void add_new(Matrix mat1, Matrix mat2) {
+void add_serial(Matrix mat1, Matrix mat2) {
     for (int i = 0; i < mat1.rows * mat1.cols; i++) {
         mat1.data[i] = mat1.data[i] + mat2.data[i % mat1.cols];
     }
 }
 
-void subtract_new(Matrix mat1, Matrix mat2, Matrix difference) {
+void subtract_serial(Matrix mat1, Matrix mat2, Matrix difference) {
     for (int i = 0; i < mat1.rows * mat1.cols; i++) {
         difference.data[i] = mat1.data[i] - mat2.data[i];
     }
 }
 
-void hadamard_new(Matrix mat1, Matrix mat2, Matrix product) {
+void hadamard_serial(Matrix mat1, Matrix mat2, Matrix product) {
     for (int i = 0; i < mat1.rows * mat1.cols; i++) {
         product.data[i] = mat1.data[i] * mat2.data[i];
     }
 }
 
-void transpose_new(Matrix mat, Matrix trans) {
+void transpose_serial(Matrix mat, Matrix trans) {
     for (int i = 0; i < mat.rows * mat.cols; i++) {
         trans.data[(i % mat.cols) * mat.rows + (i / mat.cols)] = mat.data[i];
     }
 }
 
-void sum_new(Matrix mat, Matrix sum) {
+void sum_serial(Matrix mat, Matrix sum) {
     for (int i = 0; i < mat.cols; i++) {
         double colSum = 0;
         for (int j = 0; j < mat.rows; j++) {
@@ -72,19 +72,19 @@ void sum_new(Matrix mat, Matrix sum) {
     }
 }
 
-void square_new(Matrix mat) {
+void square_serial(Matrix mat) {
     for (int i = 0; i < mat.rows * mat.cols; i++) {
         mat.data[i] = mat.data[i] * mat.data[i];
     }
 }
 
-void matrix_tanh_new(Matrix mat) {
+void matrix_tanh_serial(Matrix mat) {
     for (int i = 0; i < mat.rows * mat.cols; i++) {
         mat.data[i] = tanhf(mat.data[i]);
     }
 }
 
-void scalar_multiply_new(Matrix mat, float scalar) {
+void scalar_multiply_serial(Matrix mat, float scalar) {
     for (int i = 0; i < mat.rows * mat.cols; i++) {
         mat.data[i] = mat.data[i] * scalar;
     }

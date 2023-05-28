@@ -14,7 +14,7 @@
 #include "../../lib/helpers/helpers.h"
 #include "../../lib/models/mlp_model.h"
 
-#include "train_mlp_mpi.h"
+#include "train_mpi.h"
 
 int main(int argc, char** argv) {
 
@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
 
     printf("YET TO BE IMPLEMENTED\n");
 
-    MLP_model model = train_mlp_mpi(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS, rank, num_procs);
+    MLP_model model = train_mpi(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS, rank, num_procs);
 
     // Test the model
     float accuracy;

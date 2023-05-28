@@ -1,5 +1,5 @@
-#ifndef TRAIN_MLP_CUDA_NEW_H
-#define TRAIN_MLP_CUDA_NEW_H
+#ifndef TRAIN_CUDA_SK_H
+#define TRAIN_CUDA_SK_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,8 +9,8 @@
 #include <cuda_runtime.h>
 
 #include "../../lib/matrix/matrix.h"
-#include "../../lib/matrix/cuda_matrix.h"
-#include "../../lib/matrix/cuda_matrix_new.h"
+#include "../../lib/matrix/matrix_cuda.h"
+#include "../../lib/matrix/matrix_cuda_sk.h"
 #include "../../lib/helpers/helpers.h"
 #include "../../lib/helpers/helper_cuda.h"
 #include "../../lib/models/mlp_model.h"
@@ -31,7 +31,7 @@ int calculate_block_size(int number) {
     return closest;
 }
 
-MLP_model train_mlp_cuda_new(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
+MLP_model train_cuda_sk(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
 
     int samples = X.rows;
     int features = X.cols;

@@ -16,7 +16,9 @@
 │   │   └── helper_cuda.h
 │   ├── matrix
 │   │   ├── matrix.h
-│   │   └── cuda_matrix.h
+│   │   └── matrix_cuda.h
+│   │   └── matrix_openmp.h
+│   │   └── matrix_mpi.h
 │   ├── models
 │   │   └── mlp_model.h
 │   ├── read
@@ -26,10 +28,10 @@
 ├── src
 │   ├── cuda
 |   |   ├── test
-|   |   └── train_mlp_cuda.h
+|   |   └── traincuda.h
 │   ├── serial
-|   |   ├── train_mlp_serial.c
-|   |   └── train_mlp_serial.h
+|   |   ├── trainserial.c
+|   |   └── trainserial.h
 │   └── python
 |       └── train.py
 ├── train.cu

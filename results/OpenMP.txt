@@ -1,5 +1,4 @@
-YET TO BE IMPLEMENTED
-Time: 8578.658 milliseconds 
+Time: 15710.564 milliseconds 
 Training set used for testing
 Accuracy: 0.553948
 

@@ -17,7 +17,7 @@ srun --reservation=fri -G1 -n1 train_cuda.bin new > results/CUDA_SINGLE_KERNEL.t
 rm train_serial.bin train_openmp.bin train_cuda.bin train_mpi.bin
 
 # MPI
-# module load OpenMPI/4.1.0-GCC-10.2.0
-# mpicc src/mpi/train.c -O2 -lm -fopenmp -o train_mpi.bin
-# srun --mpi=pmix -n4 -N1 --reservation=fri train_mpi.bin > results/MPI.txt
-# rm train_mpi.bin
+module load OpenMPI/4.1.0-GCC-10.2.0
+mpicc src/mpi/train.c -O2 -lm -fopenmp -o train_mpi.bin
+srun --mpi=pmix -n4 -N1 --reservation=fri train_mpi.bin > results/MPI.txt
+rm train_mpi.bin

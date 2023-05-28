@@ -1,5 +1,5 @@
-#ifndef TRAIN_MLP_SERIAL_H
-#define TRAIN_MLP_SERIAL_H
+#ifndef TRAIN_SERIAL_H
+#define TRAIN_SERIAL_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,65 +7,65 @@
 #include <math.h>
 
 #include "../../lib/matrix/matrix.h"
-#include "../../lib/matrix/matrix_new.h"
+#include "../../lib/matrix/matrix_serial.h"
 #include "../../lib/models/mlp_model.h"
 
-MLP_model train_mlp_serial(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs);
+MLP_model train_serial(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs);
 
 void serial_compute_H(Matrix H, Matrix Xb, Matrix W1, Matrix b1) {
-    dot_new(Xb, W1, H);
-    add_new(H, b1);
-    matrix_tanh_new(H);
+    dot_serial(Xb, W1, H);
+    add_serial(H, b1);
+    matrix_tanh_serial(H);
 }
 
 void serial_compute_Y_hat(Matrix Y_hat, Matrix H, Matrix W2, Matrix b2) {
-    dot_new(H, W2, Y_hat);
-    add_new(Y_hat, b2);
-    matrix_tanh_new(Y_hat);
+    dot_serial(H, W2, Y_hat);
+    add_serial(Y_hat, b2);
+    matrix_tanh_serial(Y_hat);
 }
 
 void serial_compute_E(Matrix E, Matrix Y_hat, Matrix Yb) {
-    subtract_new(Y_hat, Yb, E);
+    subtract_serial(Y_hat, Yb, E);
 }
 
 void serial_compute_delta_output(Matrix deltaOutput, Matrix E, Matrix Y_hat, Matrix ones_matrix) {
-    square_new(Y_hat);
-    subtract_new(ones_matrix, Y_hat, Y_hat);
-    hadamard_new(E, Y_hat, deltaOutput);
+    square_serial(Y_hat);
+    subtract_serial(ones_matrix, Y_hat, Y_hat);
+    hadamard_serial(E, Y_hat, deltaOutput);
 }
 
 void serial_compute_W2g(Matrix W2g, Matrix H, Matrix H_tranpose, Matrix deltaOutput) {
-    transpose_new(H, H_tranpose);
-    dot_new(H_tranpose, deltaOutput, W2g);
+    transpose_serial(H, H_tranpose);
+    dot_serial(H_tranpose, deltaOutput, W2g);
 }
 
 void serial_compute_b2g(Matrix b2g, Matrix deltaOutput) {
-    sum_new(deltaOutput, b2g);
+    sum_serial(deltaOutput, b2g);
 }
 
 void serial_compute_He(Matrix He, Matrix deltaOutput, Matrix W2, Matrix W2_transpose, Matrix H, Matrix ones2_matrix) {
-    transpose_new(W2, W2_transpose);
-    dot_new(deltaOutput, W2_transpose, He);
-    square_new(H);
-    subtract_new(ones2_matrix, H, H);
-    hadamard_new(He, H, He);
+    transpose_serial(W2, W2_transpose);
+    dot_serial(deltaOutput, W2_transpose, He);
+    square_serial(H);
+    subtract_serial(ones2_matrix, H, H);
+    hadamard_serial(He, H, He);
 }
 
 void serial_compute_W1g(Matrix W1g, Matrix Xb, Matrix Xb_transpose, Matrix He) {
-    transpose_new(Xb, Xb_transpose);
-    dot_new(Xb_transpose, He, W1g);
+    transpose_serial(Xb, Xb_transpose);
+    dot_serial(Xb_transpose, He, W1g);
 }
 
 void serial_compute_b1g(Matrix b1g, Matrix He) {
-    sum_new(He, b1g);
+    sum_serial(He, b1g);
 }
 
 void serial_update_weights(Matrix m, Matrix g, float eta) {
-    scalar_multiply_new(g, eta);
-    subtract_new(m, g, m);
+    scalar_multiply_serial(g, eta);
+    subtract_serial(m, g, m);
 }
 
-MLP_model train_mlp_serial(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
+MLP_model train_serial(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
 
     int samples = X.rows;
     int features = X.cols;

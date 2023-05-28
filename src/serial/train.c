@@ -13,7 +13,7 @@
 #include "../../lib/helpers/helpers.h"
 #include "../../lib/models/mlp_model.h"
 
-#include "train_mlp_serial.h"
+#include "train_serial.h"
 
 int main(int argc, char** argv) {
 
@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     TrainTestSplit split = prepare_dataset(FILEPATH, CLASSES, TRAIN_SIZE_PERCENTAGE);
 
     double elapsed = omp_get_wtime();
-    MLP_model model = train_mlp_serial(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
+    MLP_model model = train_serial(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
     elapsed = omp_get_wtime() - elapsed;
     printf("Time: %0.3f milliseconds \n", elapsed * 1000);
 

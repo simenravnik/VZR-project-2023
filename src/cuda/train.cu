@@ -10,12 +10,12 @@
 #include "../../lib/read/read.h"
 #include "../../lib/matrix/matrix.h"
 #include "../../lib/helpers/helpers.h"
-#include "../../lib/matrix/cuda_matrix.h"
+#include "../../lib/matrix/matrix_cuda.h"
 #include "../../lib/models/mlp_model.h"
 #include "../../lib/time/cuda_timer.h"
 
-#include "train_mlp_cuda.h"
-#include "train_mlp_cuda_new.h"
+#include "train_cuda.h"
+#include "train_cuda_sk.h"
 
 int main(int argc, char** argv) {
 
@@ -31,10 +31,10 @@ int main(int argc, char** argv) {
     // Train the model
     if (strcmp(argv[1], "cuda") == 0) {
         printf("CUDA\n");
-        model = train_mlp_cuda(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
+        model = train_cuda(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
     } else if (strcmp(argv[1], "new") == 0) {
         printf("CUDA SINGLE KERNEL\n");
-        model = train_mlp_cuda_new(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
+        model = train_cuda_sk(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS);
     } else {
         printf("Invalid argument. Please use either 'serial' or 'cuda'.\n");
         return 1;

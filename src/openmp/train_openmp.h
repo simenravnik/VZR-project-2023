@@ -1,5 +1,5 @@
-#ifndef TRAIN_MLP_OPENMP_H
-#define TRAIN_MLP_OPENMP_H
+#ifndef TRAIN_OPENMP_H
+#define TRAIN_OPENMP_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,7 +11,7 @@
 #include "../../lib/matrix/matrix_openmp.h"
 #include "../../lib/models/mlp_model.h"
 
-MLP_model train_mlp_openmp(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs);
+MLP_model train_openmp(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs);
 
 void omp_compute_H(Matrix H, Matrix Xb, Matrix W1, Matrix b1) {
     dot_omp(Xb, W1, H);
@@ -66,7 +66,7 @@ void omp_update_weights(Matrix m, Matrix g, float eta) {
     subtract_omp(m, g, m);
 }
 
-MLP_model train_mlp_openmp(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
+MLP_model train_openmp(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
 
     int samples = X.rows;
     int features = X.cols;

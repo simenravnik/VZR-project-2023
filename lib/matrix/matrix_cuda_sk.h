@@ -31,21 +31,21 @@ __device__ void device_print_matrix(float* mat, int rows, int cols) {
     printf("]\n\n");
 }
 
-__device__ void device_matrix_tanh_new(int idx, float* A, float* C, int rowsA, int colsA) {
+__device__ void device_matrix_tanh_sk(int idx, float* A, float* C, int rowsA, int colsA) {
     __syncthreads();
     if (idx < rowsA * colsA) {
         C[idx] = tanh(A[idx]);
     }
 }
 
-__device__ void device_add_new(int idx, float* A, float* B, float* C, int rowsA, int colsA) {
+__device__ void device_add_sk(int idx, float* A, float* B, float* C, int rowsA, int colsA) {
     __syncthreads();
     if (idx < rowsA * colsA) {
         C[idx] = A[idx] + B[idx % colsA];
     }
 }
 
-__device__ void device_dot_new(int idx, float* A, float* B, float* C, int rowsA, int colsA, int colsB) {
+__device__ void device_dot_sk(int idx, float* A, float* B, float* C, int rowsA, int colsA, int colsB) {
     __syncthreads();
     if (idx < rowsA * colsB) {
         int row = idx / colsB;
@@ -59,21 +59,21 @@ __device__ void device_dot_new(int idx, float* A, float* B, float* C, int rowsA,
     }
 }
 
-__device__ void device_subtract_new(int idx, float* A, float* B, float* C, int rowsA, int colsA) {
+__device__ void device_subtract_sk(int idx, float* A, float* B, float* C, int rowsA, int colsA) {
     __syncthreads();
     if (idx < rowsA * colsA) {
         C[idx] = A[idx] - B[idx];
     }
 }
 
-__device__ void device_hadamard_new(int idx, float* A, float* B, float* C, int rowsA, int colsA) {
+__device__ void device_hadamard_sk(int idx, float* A, float* B, float* C, int rowsA, int colsA) {
     __syncthreads();
     if (idx < rowsA * colsA) {
         C[idx] = A[idx] * B[idx];
     }
 }
 
-__device__ void device_transpose_new(int idx, float* A, float* C, int rowsA, int colsA) {
+__device__ void device_transpose_sk(int idx, float* A, float* C, int rowsA, int colsA) {
     __syncthreads();
     if (idx < rowsA * colsA) {
         int row = idx / colsA;
@@ -82,7 +82,7 @@ __device__ void device_transpose_new(int idx, float* A, float* C, int rowsA, int
     }
 }
 
-__device__ void device_sum_new(int idx, float* A, float* C, int rowsA, int colsA) {
+__device__ void device_sum_sk(int idx, float* A, float* C, int rowsA, int colsA) {
     __syncthreads();
     if (idx < colsA) {
         float sum = 0.0f;
@@ -93,14 +93,14 @@ __device__ void device_sum_new(int idx, float* A, float* C, int rowsA, int colsA
     }
 }
 
-__device__ void device_square_new(int idx, float* A, float* C, int rowsA, int colsA) {
+__device__ void device_square_sk(int idx, float* A, float* C, int rowsA, int colsA) {
     __syncthreads();
     if (idx < rowsA * colsA) {
         C[idx] = A[idx] * A[idx];
     }
 }
 
-__device__ void device_scalar_multiply_new(int idx, float* A, float* C, float scalar, int rowsA, int colsA) {
+__device__ void device_scalar_multiply_sk(int idx, float* A, float* C, float scalar, int rowsA, int colsA) {
     __syncthreads();
     if (idx < rowsA * colsA) {
         C[idx] = A[idx] * scalar;
@@ -108,57 +108,57 @@ __device__ void device_scalar_multiply_new(int idx, float* A, float* C, float sc
 }
 
 __device__ void cuda_compute_H(int idx, float* W1_dev, float* b1_dev, float* Xb_dev, float* H_dev, int batchSize, int features, int hiddenSize) {
-    device_dot_new(idx, Xb_dev, W1_dev, H_dev, batchSize, features, hiddenSize);
-    device_add_new(idx, H_dev, b1_dev, H_dev, batchSize, hiddenSize);
-    device_matrix_tanh_new(idx, H_dev, H_dev, batchSize, hiddenSize);
+    device_dot_sk(idx, Xb_dev, W1_dev, H_dev, batchSize, features, hiddenSize);
+    device_add_sk(idx, H_dev, b1_dev, H_dev, batchSize, hiddenSize);
+    device_matrix_tanh_sk(idx, H_dev, H_dev, batchSize, hiddenSize);
 }
 
 __device__ void cuda_compute_Y_hat(int idx, float* H_dev, float* W2_dev, float* Y_hat_dev, float* b2_dev, int batchSize, int hiddenSize, int outputs) {
-    device_dot_new(idx, H_dev, W2_dev, Y_hat_dev, batchSize, hiddenSize, outputs);
-    device_add_new(idx, Y_hat_dev, b2_dev, Y_hat_dev, batchSize, outputs);
-    device_matrix_tanh_new(idx, Y_hat_dev, Y_hat_dev, batchSize, outputs);
+    device_dot_sk(idx, H_dev, W2_dev, Y_hat_dev, batchSize, hiddenSize, outputs);
+    device_add_sk(idx, Y_hat_dev, b2_dev, Y_hat_dev, batchSize, outputs);
+    device_matrix_tanh_sk(idx, Y_hat_dev, Y_hat_dev, batchSize, outputs);
 }
 
 __device__ void cuda_compute_E(int idx, float* Y_hat_dev, float* Yb_dev, float* E_dev, int batchSize, int outputs) {
-    device_subtract_new(idx, Y_hat_dev, Yb_dev, E_dev, batchSize, outputs);
+    device_subtract_sk(idx, Y_hat_dev, Yb_dev, E_dev, batchSize, outputs);
 }
 
 __device__ void cuda_compute_delta_output(int idx, float* deltaOutput_dev, float* E_dev, float* ones_dev, float* Y_hat_dev, int batchSize, int outputs) {
-    device_square_new(idx, Y_hat_dev, Y_hat_dev, batchSize, outputs);
-    device_subtract_new(idx, ones_dev, Y_hat_dev, deltaOutput_dev, batchSize, outputs);
-    device_hadamard_new(idx, E_dev, deltaOutput_dev, deltaOutput_dev, batchSize, outputs);
+    device_square_sk(idx, Y_hat_dev, Y_hat_dev, batchSize, outputs);
+    device_subtract_sk(idx, ones_dev, Y_hat_dev, deltaOutput_dev, batchSize, outputs);
+    device_hadamard_sk(idx, E_dev, deltaOutput_dev, deltaOutput_dev, batchSize, outputs);
 }
 
 __device__ void cuda_compute_w2g(int idx, float* W2g_dev, float* H_dev, float* H_transpose_dev, float* deltaOutput_dev, int batchSize, int hiddenSize, int outputs) {
-    device_transpose_new(idx, H_dev, H_transpose_dev, batchSize, hiddenSize);
-    device_dot_new(idx, H_transpose_dev, deltaOutput_dev, W2g_dev, hiddenSize, batchSize, outputs);
+    device_transpose_sk(idx, H_dev, H_transpose_dev, batchSize, hiddenSize);
+    device_dot_sk(idx, H_transpose_dev, deltaOutput_dev, W2g_dev, hiddenSize, batchSize, outputs);
 }
 
 __device__ void cuda_compute_b2g(int idx, float* b2g_dev, float* deltaOutput_dev, int batchSize, int outputs) {
-    device_sum_new(idx, deltaOutput_dev, b2g_dev, batchSize, outputs);
+    device_sum_sk(idx, deltaOutput_dev, b2g_dev, batchSize, outputs);
 }
 
 __device__ void cuda_compute_He(int idx, float* He_dev, float* deltaOutput_dev, float* W2_dev, float* W2_transpose_dev, float* H_dev, float* ones2_dev, int batchSize, int outputs, int hiddenSize) {
-    device_transpose_new(idx, W2_dev, W2_transpose_dev, hiddenSize, outputs);
-    device_dot_new(idx, deltaOutput_dev, W2_transpose_dev, He_dev, batchSize, outputs, hiddenSize);
+    device_transpose_sk(idx, W2_dev, W2_transpose_dev, hiddenSize, outputs);
+    device_dot_sk(idx, deltaOutput_dev, W2_transpose_dev, He_dev, batchSize, outputs, hiddenSize);
 
-    device_square_new(idx, H_dev, H_dev, batchSize, hiddenSize);
-    device_subtract_new(idx, ones2_dev, H_dev, H_dev, batchSize, hiddenSize);
-    device_hadamard_new(idx, He_dev, H_dev, He_dev, batchSize, hiddenSize);
+    device_square_sk(idx, H_dev, H_dev, batchSize, hiddenSize);
+    device_subtract_sk(idx, ones2_dev, H_dev, H_dev, batchSize, hiddenSize);
+    device_hadamard_sk(idx, He_dev, H_dev, He_dev, batchSize, hiddenSize);
 }
 
 __device__ void cuda_compute_W1g(int idx, float* W1g_dev, float* Xb_dev, float* Xb_transpose_dev, float* He_dev, int batchSize, int features, int hiddenSize) {
-    device_transpose_new(idx, Xb_dev, Xb_transpose_dev, batchSize, features);
-    device_dot_new(idx, Xb_transpose_dev, He_dev, W1g_dev, features, batchSize, hiddenSize);
+    device_transpose_sk(idx, Xb_dev, Xb_transpose_dev, batchSize, features);
+    device_dot_sk(idx, Xb_transpose_dev, He_dev, W1g_dev, features, batchSize, hiddenSize);
 }
 
 __device__ void cuda_compute_b1g(int idx, float* b1g_dev, float* He_dev, int batchSize, int hiddenSize) {
-    device_sum_new(idx, He_dev, b1g_dev, batchSize, hiddenSize);
+    device_sum_sk(idx, He_dev, b1g_dev, batchSize, hiddenSize);
 }
 
 __device__ void cuda_update_weights(int idx, float* m, float* g, float eta, int rows, int cols) {
-    device_scalar_multiply_new(idx, g, g, eta, rows, cols);
-    device_subtract_new(idx, m, g, m, rows, cols);
+    device_scalar_multiply_sk(idx, g, g, eta, rows, cols);
+    device_subtract_sk(idx, m, g, m, rows, cols);
 }
 
 __global__ void train_on_gpu(float* W1_dev, float* W2_dev, float* b1_dev, float* b2_dev, float* Xb_dev, float* Yb_dev,

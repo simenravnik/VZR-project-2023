@@ -1,5 +1,5 @@
-#ifndef TRAIN_MLP_CUDA_H
-#define TRAIN_MLP_CUDA_H
+#ifndef TRAIN_CUDA_H
+#define TRAIN_CUDA_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +9,7 @@
 #include <cuda_runtime.h>
 
 #include "../../lib/matrix/matrix.h"
-#include "../../lib/matrix/cuda_matrix.h"
+#include "../../lib/matrix/matrix_cuda.h"
 #include "../../lib/helpers/helpers.h"
 #include "../../lib/helpers/helper_cuda.h"
 #include "../../lib/models/mlp_model.h"
@@ -25,7 +25,7 @@ void compute_W1g(Matrix W1g_dev, Matrix Xb_dev, Matrix Xb_transpose_dev, Matrix 
 void compute_b1g(Matrix b1g_dev, Matrix He_dev);
 void update_weights(Matrix m, Matrix g, float eta);
 
-MLP_model train_mlp_cuda(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs);
+MLP_model train_cuda(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs);
 
 #define blockSize 256
 
@@ -151,7 +151,7 @@ void update_weights(Matrix m, Matrix g, float eta) {
     device_subtract<<<gridSize, blockSize>>>(m.data, g.data, m.data, rows, cols);
 }
 
-MLP_model train_mlp_cuda(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
+MLP_model train_cuda(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
 
     int samples = X.rows;
     int features = X.cols;
