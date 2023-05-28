@@ -8,15 +8,15 @@
 #include <math.h>
 #include "matrix.h"
 
-void dot_mpi(Matrix mat1, Matrix mat2, Matrix product);
-void add_mpi(Matrix mat1, Matrix mat2);
-void subtract_mpi(Matrix mat1, Matrix mat2, Matrix difference);
-void hadamard_mpi(Matrix mat1, Matrix mat2, Matrix product);
-void transpose_mpi(Matrix mat, Matrix trans);
-void sum_mpi(Matrix mat, Matrix sum);
-void square_mpi(Matrix mat);
-void matrix_tanh_mpi(Matrix mat);
-void scalar_multiply_mpi(Matrix mat, float scalar);
+void dot_mpi(Matrix mat1, Matrix mat2, Matrix product, int rank, int num_procs);
+void add_mpi(Matrix mat1, Matrix mat2, int rank, int num_procs);
+void subtract_mpi(Matrix mat1, Matrix mat2, Matrix difference, int rank, int num_procs);
+void hadamard_mpi(Matrix mat1, Matrix mat2, Matrix product, int rank, int num_procs);
+void transpose_mpi(Matrix mat, Matrix trans, int rank, int num_procs);
+void sum_mpi(Matrix mat, Matrix sum, int rank, int num_procs);
+void square_mpi(Matrix mat, int rank, int num_procs);
+void matrix_tanh_mpi(Matrix mat, int rank, int num_procs);
+void scalar_multiply_mpi(Matrix mat, float scalar, int rank, int num_procs);
 
 void dot_mpi(Matrix mat1, Matrix mat2, Matrix product, int rank, int num_procs) {
     if (mat1.cols != mat2.rows) {
@@ -255,42 +255,38 @@ void sum_mpi(Matrix mat, Matrix sum, int rank, int num_procs) {
     free(displs);
 }
 
-void sum_mpi(Matrix mat, Matrix sum, int rank, int num_procs) {
-    int cols_per_proc = mat.cols / num_procs;
-    int cols_remaining = mat.cols % num_procs;
-    int *send_counts = malloc(num_procs * sizeof(int));
-    int *displs = malloc(num_procs * sizeof(int));
+void square_mpi(Matrix mat, int rank, int num_procs) {
+    int num_elements = mat.rows * mat.cols;
+    int local_elements = num_elements / num_procs;
+    int remaining_elements = num_elements % num_procs;
 
-    // Calculate send_counts and displs for scattering the columns
+    int* send_counts = malloc(num_procs * sizeof(int));
+    int* displs = malloc(num_procs * sizeof(int));
+
+    // Calculate send_counts and displs for scattering the matrix
     for (int i = 0; i < num_procs; i++) {
-        send_counts[i] = cols_per_proc;
-        if (i < cols_remaining) {
-            send_counts[i] += 1;
+        send_counts[i] = local_elements;
+        if (i < remaining_elements) {
+            send_counts[i]++;
         }
         displs[i] = (i > 0) ? (displs[i - 1] + send_counts[i - 1]) : 0;
     }
 
-    // Scatter columns of mat
-    double *local_mat = malloc(mat.rows * send_counts[rank] * sizeof(double));
-    double *local_sum = malloc(send_counts[rank] * sizeof(double));
-    MPI_Scatterv(mat.data, send_counts, displs, MPI_DOUBLE, local_mat, mat.rows * send_counts[rank], MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    // Scatter matrix data
+    double* local_data = malloc(send_counts[rank] * sizeof(double));
+    MPI_Scatterv(mat.data, send_counts, displs, MPI_DOUBLE, local_data, send_counts[rank], MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-    // Calculate local column sums
+    // Square the local elements
     for (int i = 0; i < send_counts[rank]; i++) {
-        double colSum = 0;
-        for (int j = 0; j < mat.rows; j++) {
-            colSum += local_mat[j * send_counts[rank] + i];
-        }
-        local_sum[i] = colSum;
+        local_data[i] = local_data[i] * local_data[i];
     }
 
-    // Gather the local column sums to the master process
-    MPI_Gatherv(local_sum, send_counts[rank], MPI_DOUBLE, sum.data, send_counts, displs, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    // Gather squared elements to the root process
+    MPI_Gatherv(local_data, send_counts[rank], MPI_DOUBLE, mat.data, send_counts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-    free(local_mat);
-    free(local_sum);
     free(send_counts);
     free(displs);
+    free(local_data);
 }
 
 void matrix_tanh_mpi(Matrix mat, int rank, int num_procs) {
@@ -356,3 +352,5 @@ void scalar_multiply_mpi(Matrix mat, float scalar, int rank, int num_procs) {
     free(send_counts);
     free(displs);
 }
+
+#endif
