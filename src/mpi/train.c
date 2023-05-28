@@ -2,10 +2,12 @@
  * Search for "TODO" comments to find the parts that need improvements.
 */
 
+#include "/usr/include/openmpi-x86_64/mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <omp.h>
 #include "../../parameters.h"
 #include "../../lib/read/read.h"
 #include "../../lib/matrix/matrix.h"
@@ -15,7 +17,6 @@
 #include "train_mlp_mpi.h"
 
 int main(int argc, char** argv) {
-
 
     MPI_Init(&argc, &argv);
 
@@ -44,8 +45,9 @@ int main(int argc, char** argv) {
 
         // Free memory
         free_split(split);
-        free_model(model);
-        
-        return 0;
+        free_model(model);  
     }
+
+    MPI_Finalize();
+    return 0;
 }
