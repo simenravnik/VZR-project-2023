@@ -1,5 +1,5 @@
-#ifndef MATRIX_NEW_H
-#define MATRIX_NEW_H
+#ifndef MATRIX_MPI_H
+#define MATRIX_MPI_H
 #define MASTER 0
 
 #include <stdio.h>
