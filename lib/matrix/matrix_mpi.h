@@ -24,33 +24,34 @@ void dot_mpi(Matrix mat1, Matrix mat2, Matrix product, int rank, int num_procs) 
         if (rank == MASTER) {
             printf("Error: Matrix dimensions do not match for dot product\n");
         }
-        MPI_Finalize();
-        exit(1);
+        return;
     }
 
-    int rows_per_proc = mat1.rows / num_procs;
-    int rows_remaining = mat1.rows % num_procs;
+    int elements_per_proc = mat1.rows / num_procs;
+    int elements_remaining = mat1.rows % num_procs;
     int *send_counts = malloc(num_procs * sizeof(int));
     int *displs = malloc(num_procs * sizeof(int));
 
-    // Calculate send_counts and displs for scattering the matrices
+    // Calculate send_counts and displs for scattering the rows of mat1
     for (int i = 0; i < num_procs; i++) {
-        send_counts[i] = rows_per_proc * mat1.cols;
-        if (i < rows_remaining) {
+        send_counts[i] = elements_per_proc * mat1.cols;
+        if (i < elements_remaining) {
             send_counts[i] += mat1.cols;
         }
         displs[i] = (i > 0) ? (displs[i - 1] + send_counts[i - 1]) : 0;
     }
 
-    // Scatter matrices mat1 and mat2
+    // Scatter rows of mat1
     float *local_mat1 = malloc(send_counts[rank] * sizeof(float));
-    float *local_mat2 = malloc(mat2.rows * mat2.cols * sizeof(float));
     MPI_Scatterv(mat1.data, send_counts, displs, MPI_FLOAT, local_mat1, send_counts[rank], MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+
+    // Broadcast mat2 to all processes
     MPI_Bcast(mat2.data, mat2.rows * mat2.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
-    // Compute local dot product
-    float *local_product = malloc(send_counts[rank] * mat2.cols * sizeof(float));
+    // Calculate partial dot products
     int local_rows = send_counts[rank] / mat1.cols;
+    float *local_product = malloc(local_rows * mat2.cols * sizeof(float));
+
     for (int i = 0; i < local_rows; i++) {
         for (int j = 0; j < mat2.cols; j++) {
             double sum = 0;
@@ -61,48 +62,46 @@ void dot_mpi(Matrix mat1, Matrix mat2, Matrix product, int rank, int num_procs) 
         }
     }
 
-    // Gather local products to the master process
-    MPI_Gatherv(local_product, send_counts[rank], MPI_FLOAT, product.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    // Gather partial products to the master process
+    MPI_Gatherv(local_product, local_rows * mat2.cols, MPI_FLOAT, product.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     free(local_mat1);
-    free(local_mat2);
     free(local_product);
     free(send_counts);
     free(displs);
 }
 
 void add_mpi(Matrix mat1, Matrix mat2, int rank, int num_procs) {
-    int cols_per_proc = mat1.cols / num_procs;
-    int cols_remaining = mat1.cols % num_procs;
+    int elements_per_proc = mat1.rows * mat1.cols / num_procs;
+    int elements_remaining = mat1.rows * mat1.cols % num_procs;
     int *send_counts = malloc(num_procs * sizeof(int));
     int *displs = malloc(num_procs * sizeof(int));
 
-    // Calculate send_counts and displs for scattering the columns
+    // Calculate send_counts and displs for scattering the elements
     for (int i = 0; i < num_procs; i++) {
-        send_counts[i] = cols_per_proc;
-        if (i < cols_remaining) {
+        send_counts[i] = elements_per_proc;
+        if (i < elements_remaining) {
             send_counts[i] += 1;
         }
         displs[i] = (i > 0) ? (displs[i - 1] + send_counts[i - 1]) : 0;
     }
 
-    // Scatter columns of mat1 and broadcast mat2
-    float *local_mat1 = malloc(mat1.rows * send_counts[rank] * sizeof(float));
-    MPI_Scatterv(mat1.data, send_counts, displs, MPI_FLOAT, local_mat1, mat1.rows * send_counts[rank], MPI_FLOAT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast(mat2.data, mat2.rows * mat2.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    // Scatter elements of mat1 and mat2
+    float *local_mat1 = malloc(send_counts[rank] * sizeof(float));
+    float *local_mat2 = malloc(send_counts[rank] * sizeof(float));
+    MPI_Scatterv(mat1.data, send_counts, displs, MPI_FLOAT, local_mat1, send_counts[rank], MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    MPI_Scatterv(mat2.data, send_counts, displs, MPI_FLOAT, local_mat2, send_counts[rank], MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
-    // Add mat2 to local columns of mat1
-    for (int i = 0; i < mat1.rows; i++) {
-        for (int j = 0; j < send_counts[rank]; j++) {
-            int col_index = displs[rank] + j;
-            local_mat1[i * send_counts[rank] + j] += mat2.data[i * mat2.cols + col_index];
-        }
+    // Perform element-wise addition
+    for (int i = 0; i < send_counts[rank]; i++) {
+        local_mat1[i] = local_mat1[i] + local_mat2[i % mat1.cols];
     }
 
-    // Gather the updated columns to the master process
-    MPI_Gatherv(local_mat1, mat1.rows * send_counts[rank], MPI_FLOAT, mat1.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    // Gather the local results to the master process
+    MPI_Gatherv(local_mat1, send_counts[rank], MPI_FLOAT, mat1.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     free(local_mat1);
+    free(local_mat2);
     free(send_counts);
     free(displs);
 }
