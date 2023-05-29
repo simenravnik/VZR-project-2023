@@ -216,6 +216,9 @@ float predict(Matrix X_test, Matrix Y_test, MLP_model model) {
     // Calculate accuracy
     float accuracy = accuracy_score(Y_test, Y_hat);
 
+    free_matrix(H);
+    free_matrix(Y_hat);
+
     return accuracy;
 }
 
