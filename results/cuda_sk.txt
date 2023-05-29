@@ -1,6 +1,6 @@
 CUDA SINGLE KERNEL
 BlockSize = 1024, GridSize = 1
-Time: 4331.506 milliseconds 
+Time: 4227.663 milliseconds 
 Training set used for testing
 Accuracy: 0.543789
 
