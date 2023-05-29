@@ -8,6 +8,7 @@
 #include "colors.h"
 #include "../read/read.h"
 #include "../matrix/matrix.h"
+#include "../matrix/matrix_serial.h"
 #include "../models/mlp_model.h"
 
 typedef struct TrainTestSplit {
@@ -199,9 +200,18 @@ float accuracy_score(Matrix y_true, Matrix y_pred) {
 }
 
 float predict(Matrix X_test, Matrix Y_test, MLP_model model) {
-    // Test the model
-    Matrix H = matrix_tanh(add(dot(X_test, model.W1), model.b1));   // trainSize x hiddenSize
-    Matrix Y_hat = matrix_tanh(add(dot(H, model.W2), model.b2));    // trainSize x classes
+
+    // H <- tanh(X_test * W1 + b1)
+    Matrix H = allocate_matrix(X_test.rows, model.W1.cols);
+    dot_serial(X_test, model.W1, H);
+    add_serial(H, model.b1);
+    matrix_tanh_serial(H);
+
+    // Y_hat <- tanh(H * W2 + b2)
+    Matrix Y_hat = allocate_matrix(X_test.rows, model.W2.cols);
+    dot_serial(H, model.W2, Y_hat);
+    add_serial(Y_hat, model.b2);
+    matrix_tanh_serial(Y_hat);
 
     // Calculate accuracy
     float accuracy = accuracy_score(Y_test, Y_hat);
