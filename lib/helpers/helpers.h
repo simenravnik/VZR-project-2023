@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "colors.h"
 #include "../read/read.h"
 #include "../matrix/matrix.h"
 #include "../models/mlp_model.h"
@@ -220,6 +221,20 @@ void free_model(MLP_model model) {
     free_matrix(model.W2);
     free_matrix(model.b1);
     free_matrix(model.b2);
+}
+
+void print_failed(const char* test_name) {
+    printf("%27s: ", test_name);
+    red();
+    printf("failed\n");
+    reset();
+}
+
+void print_passed(const char* test_name) {
+    printf("%27s: ", test_name);
+    green();
+    printf("passed\n");
+    reset();
 }
 
 #endif

@@ -14,6 +14,7 @@ typedef struct Matrix {
 } Matrix;
 
 Matrix allocate_matrix(int rows, int cols);
+Matrix duplicate_matrix(Matrix mat);
 void free_matrix(Matrix mat);
 Matrix random_matrix(int rows, int cols);
 void print_matrix(Matrix mat);
@@ -35,6 +36,12 @@ Matrix allocate_matrix(int rows, int cols) {
     float* data = (float*) malloc(rows * cols * sizeof(float));
     Matrix mat = {data, rows, cols};
     return mat;
+}
+
+Matrix duplicate_matrix(Matrix mat) {
+    Matrix dup = allocate_matrix(mat.rows, mat.cols);
+    memcpy(dup.data, mat.data, mat.rows * mat.cols * sizeof(float));
+    return dup;
 }
 
 void free_matrix(Matrix mat) {
