@@ -11,6 +11,38 @@
 
 #define MASTER 0
 
+void test_mpi_subtract(Matrix A, Matrix B, int rank, int num_procs) {
+
+    Matrix C = duplicate_matrix(A);
+    Matrix D = duplicate_matrix(B);
+    Matrix difference = allocate_matrix(C.rows, C.cols);
+    subtract_mpi(C, D, difference, rank, num_procs);
+
+    if (rank == MASTER) {
+
+        Matrix C_ref = duplicate_matrix(A);
+        Matrix D_ref = duplicate_matrix(B);
+        Matrix difference_ref = allocate_matrix(C_ref.rows, C_ref.cols);
+        
+        subtract_serial(C_ref, D_ref, difference_ref);
+
+        int error = compare_matrices(difference, difference_ref);
+
+        if (error) {
+            print_failed("MPI Subtract Test");
+        } else {
+            print_passed("MPI Subtract Test");
+        }
+
+        free(C_ref.data);
+        free(D_ref.data);
+        free(difference_ref.data);
+    }
+    free(C.data);
+    free(D.data);
+    free(difference.data);
+}
+
 void test_mpi_tanh(Matrix A, int rank, int num_procs) {
 
     Matrix C = duplicate_matrix(A);
@@ -22,9 +54,6 @@ void test_mpi_tanh(Matrix A, int rank, int num_procs) {
         matrix_tanh_serial(C_ref);
 
         int error = compare_matrices(C, C_ref);
-
-        print_matrix(C);
-        print_matrix(C_ref);
 
         free(C_ref.data);
 
@@ -54,15 +83,8 @@ int main(int argc, char** argv) {
     Matrix B = random_matrix(rows_B, cols_B);
     Matrix b = random_matrix(1, cols_A);
 
-    A.data[0] = 1;
-    A.data[1] = 2;
-    A.data[2] = 3;
-    A.data[3] = 4;
-    A.data[4] = 5;
-    A.data[5] = 6;
-
-    // Tanh of A
     test_mpi_tanh(A, rank, num_procs);
+    test_mpi_subtract(A, B, rank, num_procs);
 
     MPI_Finalize();
 
