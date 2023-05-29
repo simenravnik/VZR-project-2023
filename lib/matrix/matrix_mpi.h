@@ -306,16 +306,16 @@ void matrix_tanh_mpi(Matrix mat, int rank, int num_procs) {
     }
 
     // Scatter elements of mat
-    double *local_mat = malloc(send_counts[rank] * sizeof(double));
-    MPI_Scatterv(mat.data, send_counts, displs, MPI_DOUBLE, local_mat, send_counts[rank], MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    float *local_mat = malloc(send_counts[rank] * sizeof(float));
+    MPI_Scatterv(mat.data, send_counts, displs, MPI_FLOAT, local_mat, send_counts[rank], MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     // Calculate local hyperbolic tangent
     for (int i = 0; i < send_counts[rank]; i++) {
-        local_mat[i] = tanh(local_mat[i]);
+        local_mat[i] = tanhf(local_mat[i]);
     }
 
     // Gather the local results to the master process
-    MPI_Gatherv(local_mat, send_counts[rank], MPI_DOUBLE, mat.data, send_counts, displs, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    MPI_Gatherv(local_mat, send_counts[rank], MPI_FLOAT, mat.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     free(local_mat);
     free(send_counts);
