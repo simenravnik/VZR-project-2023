@@ -1,5 +1,5 @@
-#ifndef CUDA_MATRIX_NEW_H
-#define CUDA_MATRIX_NEW_H
+#ifndef MATRIX_CUDA_SK_H
+#define MATRIX_CUDA_SK_H
 
 #include <stdio.h>
 #include <stdlib.h>
