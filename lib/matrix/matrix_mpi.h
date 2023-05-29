@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <mpi.h>
 #include "matrix.h"
 
 void dot_mpi(Matrix mat1, Matrix mat2, Matrix product, int rank, int num_procs);
@@ -94,7 +95,7 @@ void add_mpi(Matrix mat1, Matrix mat2, int rank, int num_procs) {
     for (int i = 0; i < mat1.rows; i++) {
         for (int j = 0; j < send_counts[rank]; j++) {
             int col_index = displs[rank] + j;
-            local_mat1[i * send_counts[rank] + j] += mat2.data[col_index];
+            local_mat1[i * send_counts[rank] + j] += mat2.data[i * mat2.cols + col_index];
         }
     }
 
@@ -310,7 +311,7 @@ void matrix_tanh_mpi(Matrix mat, int rank, int num_procs) {
 
     // Calculate local hyperbolic tangent
     for (int i = 0; i < send_counts[rank]; i++) {
-        local_mat[i] = tanhf(local_mat[i]);
+        local_mat[i] = tanh(local_mat[i]);
     }
 
     // Gather the local results to the master process
