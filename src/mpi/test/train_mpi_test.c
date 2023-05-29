@@ -1,4 +1,4 @@
-#include "/usr/include/openmpi-x86_64/mpi.h"
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -269,10 +269,10 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    const int rows_A = 2;
-    const int cols_A = 3;
-    const int rows_B = 3;
-    const int cols_B = 2;
+    const int rows_A = 20;
+    const int cols_A = 30;
+    const int rows_B = 30;
+    const int cols_B = 20;
     const float scalar = 28.6;
 
     Matrix A = random_matrix(rows_A, cols_A);
@@ -280,7 +280,7 @@ int main(int argc, char** argv) {
     Matrix b = random_matrix(1, cols_A);
 
     test_mpi_dot(A, B, rank, num_procs);
-    test_mpi_add(A, B, rank, num_procs);
+    test_mpi_add(A, b, rank, num_procs);
     test_mpi_subtract(A, B, rank, num_procs);
     test_mpi_hadamard(A, B, rank, num_procs);
     test_mpi_transpose(A, rank, num_procs);

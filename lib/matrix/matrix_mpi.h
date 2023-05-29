@@ -27,32 +27,32 @@ void dot_mpi(Matrix mat1, Matrix mat2, Matrix product, int rank, int num_procs) 
         return;
     }
 
-    int rows_per_proc = mat1.rows / num_procs;
-    int rows_remaining = mat1.rows % num_procs;
+    int elements_per_proc = mat1.rows / num_procs;
+    int elements_remaining = mat1.rows % num_procs;
     int *send_counts = malloc(num_procs * sizeof(int));
     int *displs = malloc(num_procs * sizeof(int));
 
-    // Calculate send_counts and displs for scattering the rows
+    // Calculate send_counts and displs for scattering the rows of mat1
     for (int i = 0; i < num_procs; i++) {
-        send_counts[i] = rows_per_proc;
-        if (i < rows_remaining) {
-            send_counts[i] += 1;
+        send_counts[i] = elements_per_proc * mat1.cols;
+        if (i < elements_remaining) {
+            send_counts[i] += mat1.cols;
         }
         displs[i] = (i > 0) ? (displs[i - 1] + send_counts[i - 1]) : 0;
     }
 
     // Scatter rows of mat1
-    float *local_mat1 = malloc(send_counts[rank] * mat1.cols * sizeof(float));
-    MPI_Scatterv(mat1.data, send_counts, displs, MPI_FLOAT, local_mat1, send_counts[rank] * mat1.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    float *local_mat1 = malloc(send_counts[rank] * sizeof(float));
+    MPI_Scatterv(mat1.data, send_counts, displs, MPI_FLOAT, local_mat1, send_counts[rank], MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     // Broadcast mat2 to all processes
     MPI_Bcast(mat2.data, mat2.rows * mat2.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
-    // Allocate memory for local product
-    float *local_product = malloc(send_counts[rank] * mat2.cols * sizeof(float));
+    // Calculate partial dot products
+    int local_rows = send_counts[rank] / mat1.cols;
+    float *local_product = malloc(local_rows * mat2.cols * sizeof(float));
 
-    // Perform local matrix multiplication
-    for (int i = 0; i < send_counts[rank]; i++) {
+    for (int i = 0; i < local_rows; i++) {
         for (int j = 0; j < mat2.cols; j++) {
             double sum = 0;
             for (int k = 0; k < mat1.cols; k++) {
@@ -62,8 +62,8 @@ void dot_mpi(Matrix mat1, Matrix mat2, Matrix product, int rank, int num_procs) 
         }
     }
 
-    // Gather the local products to the master process
-    MPI_Gatherv(local_product, send_counts[rank] * mat2.cols, MPI_FLOAT, product.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    // Gather partial products to the master process
+    MPI_Gatherv(local_product, local_rows * mat2.cols, MPI_FLOAT, product.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     free(local_mat1);
     free(local_product);
