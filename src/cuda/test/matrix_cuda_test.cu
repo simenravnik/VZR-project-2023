@@ -120,7 +120,8 @@ void test_device_tanh(Matrix A) {
 void test_device_subtract(Matrix A, Matrix B) {
 
     // Transpose B to get the correct dimensions
-    Matrix B_transposed = transpose(B);
+    Matrix B_transposed = allocate_matrix(B.cols, B.rows);
+    transpose_serial(B, B_transposed);
 
     // Allocate memory on the device
     Matrix A_dev = to_device(A);
@@ -162,7 +163,8 @@ void test_device_subtract(Matrix A, Matrix B) {
 void test_device_hadamard(Matrix A, Matrix B) {
 
     // Transpose B to get the correct dimensions
-    Matrix B_transposed = transpose(B);
+    Matrix B_transposed = allocate_matrix(B.cols, B.rows);
+    transpose_serial(B, B_transposed);
 
     // Allocate memory on the device
     Matrix A_dev = to_device(A);

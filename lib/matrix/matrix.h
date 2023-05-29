@@ -19,16 +19,7 @@ void free_matrix(Matrix mat);
 Matrix random_matrix(int rows, int cols);
 void print_matrix(Matrix mat);
 Matrix slice_matrix(Matrix mat, int startRow, int endRow, int startCol, int endCol);
-Matrix dot(Matrix mat1, Matrix mat2);
-Matrix add(Matrix mat1, Matrix mat2);
-Matrix subtract(Matrix mat1, Matrix mat2);
-Matrix hadamard(Matrix mat1, Matrix mat2);
-Matrix transpose(Matrix mat);
-Matrix sum(Matrix mat);
 Matrix ones(int rows, int cols);
-Matrix square(Matrix mat);
-Matrix matrix_tanh(Matrix mat);
-Matrix scalar_multiply(Matrix mat, float scalar);
 Matrix argmax(Matrix mat);
 int compare_matrices(Matrix mat1, Matrix mat2);
 
@@ -92,105 +83,12 @@ Matrix slice_matrix(Matrix mat, int startRow, int endRow, int startCol, int endC
     return slice;
 }
 
-Matrix dot(Matrix mat1, Matrix mat2) {
-    if (mat1.cols != mat2.rows) {
-        printf("Error: Matrix dimensions do not match for dot product\n");
-        Matrix null = {NULL, 0, 0};
-        return null;
-    }
-    Matrix product = allocate_matrix(mat1.rows, mat2.cols);
-    for (int i = 0; i < mat1.rows; i++) {
-        for (int j = 0; j < mat2.cols; j++) {
-            double sum = 0;
-            for (int k = 0; k < mat1.cols; k++) {
-                sum += mat1.data[i * mat1.cols + k] * mat2.data[k * mat2.cols + j];
-            }
-            product.data[i * mat2.cols + j] = (float)sum;
-        }
-    }
-    return product;
-}
-
-/**
- * Addition between matrix and vector!!!
- * Adds mat2 to each column of mat1
- * 
- * Do not use for matrix addition
-*/
-Matrix add(Matrix mat1, Matrix mat2) {
-    Matrix sum = allocate_matrix(mat1.rows, mat1.cols);
-    for (int i = 0; i < mat1.rows * mat1.cols; i++) {
-        sum.data[i] = mat1.data[i] + mat2.data[i % mat1.cols];
-    }
-    return sum;
-}
-
-Matrix subtract(Matrix mat1, Matrix mat2) {
-    Matrix difference = allocate_matrix(mat1.rows, mat1.cols);
-    for (int i = 0; i < mat1.rows * mat1.cols; i++) {
-        difference.data[i] = mat1.data[i] - mat2.data[i];
-    }
-    return difference;
-}
-
-Matrix hadamard(Matrix mat1, Matrix mat2) {
-    Matrix product = allocate_matrix(mat1.rows, mat1.cols);
-    for (int i = 0; i < mat1.rows * mat1.cols; i++) {
-        product.data[i] = mat1.data[i] * mat2.data[i];
-    }
-    return product;
-}
-
-Matrix transpose(Matrix mat) {
-    Matrix trans = allocate_matrix(mat.cols, mat.rows);
-    for (int i = 0; i < mat.rows * mat.cols; i++) {
-        trans.data[(i % mat.cols) * mat.rows + (i / mat.cols)] = mat.data[i];
-    }
-    return trans;
-}
-
-Matrix sum(Matrix mat) {
-    Matrix sum = allocate_matrix(1, mat.cols);
-    for (int i = 0; i < mat.cols; i++) {
-        double colSum = 0;
-        for (int j = 0; j < mat.rows; j++) {
-            colSum += mat.data[j * mat.cols + i];
-        }
-        sum.data[i] = (float)colSum;
-    }
-    return sum;
-}
-
 Matrix ones(int rows, int cols) {
     Matrix ones = allocate_matrix(rows, cols);
     for (int i = 0; i < rows * cols; i++) {
         ones.data[i] = 1;
     }
     return ones;
-}
-
-Matrix square(Matrix mat) {
-    Matrix square = allocate_matrix(mat.rows, mat.cols);
-    for (int i = 0; i < mat.rows * mat.cols; i++) {
-        square.data[i] = mat.data[i] * mat.data[i];
-    }
-    return square;
-}
-
-Matrix matrix_tanh(Matrix mat) {
-    Matrix tanh = allocate_matrix(mat.rows, mat.cols);
-    for (int i = 0; i < mat.rows * mat.cols; i++) {
-        tanh.data[i] = tanhf(mat.data[i]);
-    }
-    return tanh;
-}
-
-Matrix scalar_multiply(Matrix mat, float scalar) {
-    Matrix product = allocate_matrix(mat.rows, mat.cols);
-    for (int i = 0; i < mat.rows * mat.cols; i++) {
-        product.data[i] = mat.data[i] * scalar;
-    }
-    return product;
 }
 
 Matrix argmax(Matrix mat) {
