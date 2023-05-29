@@ -13,55 +13,55 @@
 
 void mpi_compute_H(Matrix H, Matrix Xb, Matrix W1, Matrix b1, int rank, int num_procs) {
     dot_serial(Xb, W1, H);
-    add_serial(H, b1);
-    matrix_tanh_serial(H);
+    add_mpi(H, b1, rank, num_procs);
+    matrix_tanh_dot(H, rank, num_procs);
 }
 
 void mpi_compute_Y_hat(Matrix Y_hat, Matrix H, Matrix W2, Matrix b2, int rank, int num_procs) {
     dot_serial(H, W2, Y_hat);
-    add_serial(Y_hat, b2);
-    matrix_tanh_serial(Y_hat);
+    add_mpi(Y_hat, b2, rank, num_procs);
+    matrix_tanh_dot(Y_hat, rank, num_procs);
 }
 
 void mpi_compute_E(Matrix E, Matrix Y_hat, Matrix Yb, int rank, int num_procs) {
-    subtract_serial(Y_hat, Yb, E);
+    subtract_dot(Y_hat, Yb, E, rank, num_procs);
 }
 
 void mpi_compute_delta_output(Matrix deltaOutput, Matrix E, Matrix Y_hat, Matrix ones_matrix, int rank, int num_procs) {
-    square_serial(Y_hat);
-    subtract_serial(ones_matrix, Y_hat, Y_hat);
-    hadamard_serial(E, Y_hat, deltaOutput);
+    square_dot(Y_hat, rank, num_procs);
+    subtract_dot(ones_matrix, Y_hat, Y_hat, rank, num_procs);
+    hadamard_dot(E, Y_hat, deltaOutput, rank, num_procs);
 }
 
 void mpi_compute_W2g(Matrix W2g, Matrix H, Matrix H_tranpose, Matrix deltaOutput, int rank, int num_procs) {
-    transpose_serial(H, H_tranpose);
+    transpose_dot(H, H_tranpose, rank, num_procs);
     dot_serial(H_tranpose, deltaOutput, W2g);
 }
 
 void mpi_compute_b2g(Matrix b2g, Matrix deltaOutput, int rank, int num_procs) {
-    sum_serial(deltaOutput, b2g);
+    sum_dot(deltaOutput, b2g, rank, num_procs);
 }
 
 void mpi_compute_He(Matrix He, Matrix deltaOutput, Matrix W2, Matrix W2_transpose, Matrix H, Matrix ones2_matrix, int rank, int num_procs) {
-    transpose_serial(W2, W2_transpose);
+    transpose_dot(W2, W2_transpose, rank, num_procs);
     dot_serial(deltaOutput, W2_transpose, He);
-    square_serial(H);
-    subtract_serial(ones2_matrix, H, H);
-    hadamard_serial(He, H, He);
+    square_dot(H, rank, num_procs);
+    subtract_dot(ones2_matrix, H, H, rank, num_procs);
+    hadamard_dot(He, H, He, rank, num_procs);
 }
 
 void mpi_compute_W1g(Matrix W1g, Matrix Xb, Matrix Xb_transpose, Matrix He, int rank, int num_procs) {
-    transpose_serial(Xb, Xb_transpose);
+    transpose_dot(Xb, Xb_transpose, rank, num_procs);
     dot_serial(Xb_transpose, He, W1g);
 }
 
 void mpi_compute_b1g(Matrix b1g, Matrix He, int rank, int num_procs) {
-    sum_serial(He, b1g);
+    sum_dot(He, b1g, rank, num_procs);
 }
 
 void mpi_update_weights(Matrix m, Matrix g, float eta, int rank, int num_procs) {
-    scalar_multiply_serial(g, eta);
-    subtract_serial(m, g, m);
+    scalar_multiply_dot(g, eta, rank, num_procs);
+    subtract_dot(m, g, m, rank, num_procs);
 }
 
 MLP_model train_mpi(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs, int rank, int num_procs);

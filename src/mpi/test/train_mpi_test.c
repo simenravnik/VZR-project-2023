@@ -15,14 +15,14 @@ void test_mpi_dot(Matrix A, Matrix B, int rank, int num_procs) {
 
     Matrix C = duplicate_matrix(A);
     Matrix D = duplicate_matrix(B);
-    Matrix product = allocate_matrix(C.rows, C.cols);
+    Matrix product = allocate_matrix(C.rows, D.cols);
     dot_mpi(C, D, product, rank, num_procs);
 
     if (rank == MASTER) {
 
         Matrix C_ref = duplicate_matrix(A);
         Matrix D_ref = duplicate_matrix(B);
-        Matrix product_ref = allocate_matrix(C_ref.rows, C_ref.cols);
+        Matrix product_ref = allocate_matrix(C_ref.rows, D_ref.cols);
         
         dot_serial(C_ref, D_ref, product_ref);
 
