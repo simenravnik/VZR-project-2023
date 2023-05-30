@@ -1,41 +1,57 @@
-# MLP using serial, CUDA, OpenMP and MPI
+# Acceleration of multilayer perceptron training
+
+> A Comparative Study of Serial, CUDA, MPI, and OpenMP Implementations
 
 ## Compile and run
 
 ```
-./run.sh
+./run_nsc.sh
+or
+./run_arnes.sh
 ```
 
 ## Project structure
 
 ```
 .
+├── README.md
+├── data
 ├── lib
 │   ├── helpers
-│   │   ├── helpers.h
-│   │   └── helper_cuda.h
 │   ├── matrix
 │   │   ├── matrix.h
-│   │   └── matrix_cuda.h
-│   │   └── matrix_openmp.h
-│   │   └── matrix_mpi.h
+│   │   ├── matrix_cuda.h
+│   │   ├── matrix_cuda_sk.h
+│   │   ├── matrix_mpi.h
+│   │   ├── matrix_openmp.h
+│   │   └── matrix_serial.h
 │   ├── models
 │   │   └── mlp_model.h
 │   ├── read
-│   |   └── read.h
+│   │   └── read.h
 │   └── time
 │       └── cuda_timer.h
-├── src
-│   ├── cuda
-|   |   ├── test
-|   |   └── traincuda.h
-│   ├── serial
-|   |   ├── trainserial.c
-|   |   └── trainserial.h
-│   └── python
-|       └── train.py
-├── train.cu
-└── run.sh
+├── parameters.h
+├── results
+├── run_arnes.sh
+├── run_nsc.sh
+└── src
+    ├── cuda
+    │   ├── test
+    │   ├── train.cu
+    │   ├── train_cuda.h
+    │   └── train_cuda_sk.h
+    ├── mpi
+    │   ├── test
+    │   ├── train.c
+    │   └── train_mpi.h
+    ├── openmp
+    │   ├── train.c
+    │   └── train_openmp.h
+    └── serial
+        ├── train.c
+        └── train_serial.h
+
 ```
 
 
