@@ -13,6 +13,7 @@
 #include "../../lib/helpers/helpers.h"
 #include "../../lib/helpers/helper_cuda.h"
 #include "../../lib/models/mlp_model.h"
+#include "../../parameters.h"
 
 void compute_H(Matrix H_dev, Matrix Xb_dev, Matrix W1_dev, Matrix b1_dev);
 void compute_Y_hat(Matrix Y_hat_dev, Matrix H_dev, Matrix W2_dev, Matrix b2_dev);
@@ -27,19 +28,17 @@ void update_weights(Matrix m, Matrix g, float eta);
 
 MLP_model train_cuda(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs);
 
-#define blockSize 256
-
 void compute_H(Matrix H_dev, Matrix Xb_dev, Matrix W1_dev, Matrix b1_dev) {
 
     int batchSize = Xb_dev.rows;
     int features = Xb_dev.cols;
     int hiddenSize = W1_dev.cols;
 
-    int gridSize = (batchSize * hiddenSize + blockSize - 1) / blockSize;
+    int gridSize = (batchSize * hiddenSize + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
 
-    device_dot<<<gridSize, blockSize>>>(Xb_dev.data, W1_dev.data, H_dev.data, batchSize, features, hiddenSize);
-    device_add<<<gridSize, blockSize>>>(H_dev.data, b1_dev.data, H_dev.data, batchSize, hiddenSize);
-    device_matrix_tanh<<<gridSize, blockSize>>>(H_dev.data, H_dev.data, batchSize, hiddenSize);
+    device_dot<<<gridSize, CUDA_BLOCK_SIZE>>>(Xb_dev.data, W1_dev.data, H_dev.data, batchSize, features, hiddenSize);
+    device_add<<<gridSize, CUDA_BLOCK_SIZE>>>(H_dev.data, b1_dev.data, H_dev.data, batchSize, hiddenSize);
+    device_matrix_tanh<<<gridSize, CUDA_BLOCK_SIZE>>>(H_dev.data, H_dev.data, batchSize, hiddenSize);
 }
 
 void compute_Y_hat(Matrix Y_hat_dev, Matrix H_dev, Matrix W2_dev, Matrix b2_dev) {
@@ -48,11 +47,11 @@ void compute_Y_hat(Matrix Y_hat_dev, Matrix H_dev, Matrix W2_dev, Matrix b2_dev)
     int hiddenSize = H_dev.cols;
     int outputs = W2_dev.cols;
 
-    int gridSize = (batchSize * outputs + blockSize - 1) / blockSize;
+    int gridSize = (batchSize * outputs + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
 
-    device_dot<<<gridSize, blockSize>>>(H_dev.data, W2_dev.data, Y_hat_dev.data, batchSize, hiddenSize, outputs);
-    device_add<<<gridSize, blockSize>>>(Y_hat_dev.data, b2_dev.data, Y_hat_dev.data, batchSize, outputs);
-    device_matrix_tanh<<<gridSize, blockSize>>>(Y_hat_dev.data, Y_hat_dev.data, batchSize, outputs);
+    device_dot<<<gridSize, CUDA_BLOCK_SIZE>>>(H_dev.data, W2_dev.data, Y_hat_dev.data, batchSize, hiddenSize, outputs);
+    device_add<<<gridSize, CUDA_BLOCK_SIZE>>>(Y_hat_dev.data, b2_dev.data, Y_hat_dev.data, batchSize, outputs);
+    device_matrix_tanh<<<gridSize, CUDA_BLOCK_SIZE>>>(Y_hat_dev.data, Y_hat_dev.data, batchSize, outputs);
 }
 
 void compute_E(Matrix E, Matrix Y_hat, Matrix Yb) {
@@ -60,9 +59,9 @@ void compute_E(Matrix E, Matrix Y_hat, Matrix Yb) {
     int batchSize = Y_hat.rows;
     int outputs = Y_hat.cols;
 
-    int gridSize = (batchSize * outputs + blockSize - 1) / blockSize;
+    int gridSize = (batchSize * outputs + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
 
-    device_subtract<<<gridSize, blockSize>>>(Y_hat.data, Yb.data, E.data, batchSize, outputs);
+    device_subtract<<<gridSize, CUDA_BLOCK_SIZE>>>(Y_hat.data, Yb.data, E.data, batchSize, outputs);
 }
 
 void compute_delta_output(Matrix deltaOutput_dev, Matrix E_dev, Matrix ones_dev, Matrix Y_hat_dev) {
@@ -70,11 +69,11 @@ void compute_delta_output(Matrix deltaOutput_dev, Matrix E_dev, Matrix ones_dev,
     int batchSize = E_dev.rows;
     int outputs = E_dev.cols;
 
-    int gridSize = (batchSize * outputs + blockSize - 1) / blockSize;
+    int gridSize = (batchSize * outputs + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
 
-    device_square<<<gridSize, blockSize>>>(Y_hat_dev.data, Y_hat_dev.data, batchSize, outputs);
-    device_subtract<<<gridSize, blockSize>>>(ones_dev.data, Y_hat_dev.data, deltaOutput_dev.data, batchSize, outputs);
-    device_hadamard<<<gridSize, blockSize>>>(E_dev.data, deltaOutput_dev.data, deltaOutput_dev.data, batchSize, outputs);
+    device_square<<<gridSize, CUDA_BLOCK_SIZE>>>(Y_hat_dev.data, Y_hat_dev.data, batchSize, outputs);
+    device_subtract<<<gridSize, CUDA_BLOCK_SIZE>>>(ones_dev.data, Y_hat_dev.data, deltaOutput_dev.data, batchSize, outputs);
+    device_hadamard<<<gridSize, CUDA_BLOCK_SIZE>>>(E_dev.data, deltaOutput_dev.data, deltaOutput_dev.data, batchSize, outputs);
 }
 
 void compute_w2g(Matrix W2g_dev, Matrix H_dev, Matrix H_transpose_dev, Matrix deltaOutput_dev) {
@@ -83,11 +82,11 @@ void compute_w2g(Matrix W2g_dev, Matrix H_dev, Matrix H_transpose_dev, Matrix de
     int hiddenSize = H_dev.cols;
     int outputs = deltaOutput_dev.cols;
 
-    int gridSizeTranspose = (batchSize * hiddenSize + blockSize - 1) / blockSize;
-    int gridSizeDot = (hiddenSize * outputs + blockSize - 1) / blockSize;
+    int gridSizeTranspose = (batchSize * hiddenSize + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
+    int gridSizeDot = (hiddenSize * outputs + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
 
-    device_transpose<<<gridSizeTranspose, blockSize>>>(H_dev.data, H_transpose_dev.data, batchSize, hiddenSize);
-    device_dot<<<gridSizeDot, blockSize>>>(H_transpose_dev.data, deltaOutput_dev.data, W2g_dev.data, hiddenSize, batchSize, outputs);
+    device_transpose<<<gridSizeTranspose, CUDA_BLOCK_SIZE>>>(H_dev.data, H_transpose_dev.data, batchSize, hiddenSize);
+    device_dot<<<gridSizeDot, CUDA_BLOCK_SIZE>>>(H_transpose_dev.data, deltaOutput_dev.data, W2g_dev.data, hiddenSize, batchSize, outputs);
 }
 
 void compute_b2g(Matrix b2g_dev, Matrix deltaOutput_dev) {
@@ -95,9 +94,9 @@ void compute_b2g(Matrix b2g_dev, Matrix deltaOutput_dev) {
     int batchSize = deltaOutput_dev.rows;
     int outputs = deltaOutput_dev.cols;
 
-    int gridSize = (batchSize * outputs + blockSize - 1) / blockSize;
+    int gridSize = (batchSize * outputs + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
 
-    device_sum<<<gridSize, blockSize>>>(deltaOutput_dev.data, b2g_dev.data, batchSize, outputs);
+    device_sum<<<gridSize, CUDA_BLOCK_SIZE>>>(deltaOutput_dev.data, b2g_dev.data, batchSize, outputs);
 }
 
 void compute_He(Matrix He_dev, Matrix deltaOutput_dev, Matrix W2_dev, Matrix W2_transpose_dev, Matrix H_dev, Matrix ones2_dev) {
@@ -106,15 +105,15 @@ void compute_He(Matrix He_dev, Matrix deltaOutput_dev, Matrix W2_dev, Matrix W2_
     int outputs = deltaOutput_dev.cols;
     int hiddenSize = W2_dev.rows;
 
-    int gridSizeTranspose = (hiddenSize * outputs + blockSize - 1) / blockSize;
-    int gridSizeDot = (batchSize * hiddenSize + blockSize - 1) / blockSize;
+    int gridSizeTranspose = (hiddenSize * outputs + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
+    int gridSizeDot = (batchSize * hiddenSize + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
 
-    device_transpose<<<gridSizeTranspose, blockSize>>>(W2_dev.data, W2_transpose_dev.data, hiddenSize, outputs);
-    device_dot<<<gridSizeDot, blockSize>>>(deltaOutput_dev.data, W2_transpose_dev.data, He_dev.data, batchSize, outputs, hiddenSize);
+    device_transpose<<<gridSizeTranspose, CUDA_BLOCK_SIZE>>>(W2_dev.data, W2_transpose_dev.data, hiddenSize, outputs);
+    device_dot<<<gridSizeDot, CUDA_BLOCK_SIZE>>>(deltaOutput_dev.data, W2_transpose_dev.data, He_dev.data, batchSize, outputs, hiddenSize);
 
-    device_square<<<gridSizeDot, blockSize>>>(H_dev.data, H_dev.data, batchSize, hiddenSize);
-    device_subtract<<<gridSizeDot, blockSize>>>(ones2_dev.data, H_dev.data, H_dev.data, batchSize, hiddenSize);
-    device_hadamard<<<gridSizeDot, blockSize>>>(He_dev.data, H_dev.data, He_dev.data, batchSize, hiddenSize);
+    device_square<<<gridSizeDot, CUDA_BLOCK_SIZE>>>(H_dev.data, H_dev.data, batchSize, hiddenSize);
+    device_subtract<<<gridSizeDot, CUDA_BLOCK_SIZE>>>(ones2_dev.data, H_dev.data, H_dev.data, batchSize, hiddenSize);
+    device_hadamard<<<gridSizeDot, CUDA_BLOCK_SIZE>>>(He_dev.data, H_dev.data, He_dev.data, batchSize, hiddenSize);
 }
 
 void compute_W1g(Matrix W1g_dev, Matrix Xb_dev, Matrix Xb_transpose_dev, Matrix He_dev) {
@@ -123,11 +122,11 @@ void compute_W1g(Matrix W1g_dev, Matrix Xb_dev, Matrix Xb_transpose_dev, Matrix 
     int features = Xb_dev.cols;
     int hiddenSize = He_dev.cols;
 
-    int gridSizeTranspose = (batchSize * features + blockSize - 1) / blockSize;
-    int gridSizeDot = (features * hiddenSize + blockSize - 1) / blockSize;
+    int gridSizeTranspose = (batchSize * features + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
+    int gridSizeDot = (features * hiddenSize + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
 
-    device_transpose<<<gridSizeTranspose, blockSize>>>(Xb_dev.data, Xb_transpose_dev.data, batchSize, features);
-    device_dot<<<gridSizeDot, blockSize>>>(Xb_transpose_dev.data, He_dev.data, W1g_dev.data, features, batchSize, hiddenSize);
+    device_transpose<<<gridSizeTranspose, CUDA_BLOCK_SIZE>>>(Xb_dev.data, Xb_transpose_dev.data, batchSize, features);
+    device_dot<<<gridSizeDot, CUDA_BLOCK_SIZE>>>(Xb_transpose_dev.data, He_dev.data, W1g_dev.data, features, batchSize, hiddenSize);
 }
 
 void compute_b1g(Matrix b1g_dev, Matrix He_dev) {
@@ -135,9 +134,9 @@ void compute_b1g(Matrix b1g_dev, Matrix He_dev) {
     int batchSize = He_dev.rows;
     int hiddenSize = He_dev.cols;
 
-    int gridSize = (hiddenSize + blockSize - 1) / blockSize;
+    int gridSize = (hiddenSize + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
 
-    device_sum<<<gridSize, blockSize>>>(He_dev.data, b1g_dev.data, batchSize, hiddenSize);
+    device_sum<<<gridSize, CUDA_BLOCK_SIZE>>>(He_dev.data, b1g_dev.data, batchSize, hiddenSize);
 }
 
 void update_weights(Matrix m, Matrix g, float eta) {
@@ -145,10 +144,10 @@ void update_weights(Matrix m, Matrix g, float eta) {
     int rows = m.rows;
     int cols = m.cols;
 
-    int gridSize = (rows * cols + blockSize - 1) / blockSize;
+    int gridSize = (rows * cols + CUDA_BLOCK_SIZE - 1) / CUDA_BLOCK_SIZE;
 
-    device_scalar_multiply<<<gridSize, blockSize>>>(g.data, g.data, eta, rows, cols);
-    device_subtract<<<gridSize, blockSize>>>(m.data, g.data, m.data, rows, cols);
+    device_scalar_multiply<<<gridSize, CUDA_BLOCK_SIZE>>>(g.data, g.data, eta, rows, cols);
+    device_subtract<<<gridSize, CUDA_BLOCK_SIZE>>>(m.data, g.data, m.data, rows, cols);
 }
 
 MLP_model train_cuda(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs) {
