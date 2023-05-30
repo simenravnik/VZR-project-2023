@@ -27,8 +27,6 @@ int main(int argc, char** argv) {
     // Prepare dataset
     TrainTestSplit split = prepare_dataset(FILEPATH, CLASSES, TRAIN_SIZE_PERCENTAGE);
 
-    printf("YET TO BE IMPLEMENTED\n");
-
     MLP_model model = train_mpi(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS, rank, num_procs);
 
     // Test the model

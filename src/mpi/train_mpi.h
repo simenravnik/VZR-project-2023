@@ -11,57 +11,59 @@
 #include "../../lib/matrix/matrix_serial.h"
 #include "../../lib/models/mlp_model.h"
 
+#define MASTER 0
+
 void mpi_compute_H(Matrix H, Matrix Xb, Matrix W1, Matrix b1, int rank, int num_procs) {
     dot_mpi(Xb, W1, H, rank, num_procs);
-    add_mpi(H, b1, rank, num_procs);
-    matrix_tanh_dot(H, rank, num_procs);
+    add_serial(H, b1);  // Fix this
+    matrix_tanh_mpi(H, rank, num_procs);
 }
 
 void mpi_compute_Y_hat(Matrix Y_hat, Matrix H, Matrix W2, Matrix b2, int rank, int num_procs) {
     dot_mpi(H, W2, Y_hat, rank, num_procs);
-    add_mpi(Y_hat, b2, rank, num_procs);
-    matrix_tanh_dot(Y_hat, rank, num_procs);
+    add_serial(Y_hat, b2);  // Fix this
+    matrix_tanh_mpi(Y_hat, rank, num_procs);
 }
 
 void mpi_compute_E(Matrix E, Matrix Y_hat, Matrix Yb, int rank, int num_procs) {
-    subtract_dot(Y_hat, Yb, E, rank, num_procs);
+    subtract_mpi(Y_hat, Yb, E, rank, num_procs);
 }
 
 void mpi_compute_delta_output(Matrix deltaOutput, Matrix E, Matrix Y_hat, Matrix ones_matrix, int rank, int num_procs) {
-    square_dot(Y_hat, rank, num_procs);
-    subtract_dot(ones_matrix, Y_hat, Y_hat, rank, num_procs);
-    hadamard_dot(E, Y_hat, deltaOutput, rank, num_procs);
+    square_mpi(Y_hat, rank, num_procs);
+    subtract_mpi(ones_matrix, Y_hat, Y_hat, rank, num_procs);
+    hadamard_mpi(E, Y_hat, deltaOutput, rank, num_procs);
 }
 
 void mpi_compute_W2g(Matrix W2g, Matrix H, Matrix H_tranpose, Matrix deltaOutput, int rank, int num_procs) {
-    transpose_dot(H, H_tranpose, rank, num_procs);
+    transpose_mpi(H, H_tranpose, rank, num_procs);
     dot_mpi(H_tranpose, deltaOutput, W2g, rank, num_procs);
 }
 
 void mpi_compute_b2g(Matrix b2g, Matrix deltaOutput, int rank, int num_procs) {
-    sum_dot(deltaOutput, b2g, rank, num_procs);
+    sum_mpi(deltaOutput, b2g, rank, num_procs);
 }
 
 void mpi_compute_He(Matrix He, Matrix deltaOutput, Matrix W2, Matrix W2_transpose, Matrix H, Matrix ones2_matrix, int rank, int num_procs) {
-    transpose_dot(W2, W2_transpose, rank, num_procs);
+    transpose_mpi(W2, W2_transpose, rank, num_procs);
     dot_mpi(deltaOutput, W2_transpose, He, rank, num_procs);
-    square_dot(H, rank, num_procs);
-    subtract_dot(ones2_matrix, H, H, rank, num_procs);
-    hadamard_dot(He, H, He, rank, num_procs);
+    square_mpi(H, rank, num_procs);
+    subtract_mpi(ones2_matrix, H, H, rank, num_procs);
+    hadamard_mpi(He, H, He, rank, num_procs);
 }
 
 void mpi_compute_W1g(Matrix W1g, Matrix Xb, Matrix Xb_transpose, Matrix He, int rank, int num_procs) {
-    transpose_dot(Xb, Xb_transpose, rank, num_procs);
+    transpose_mpi(Xb, Xb_transpose, rank, num_procs);
     dot_mpi(Xb_transpose, He, W1g, rank, num_procs);
 }
 
 void mpi_compute_b1g(Matrix b1g, Matrix He, int rank, int num_procs) {
-    sum_dot(He, b1g, rank, num_procs);
+    sum_mpi(He, b1g, rank, num_procs);
 }
 
 void mpi_update_weights(Matrix m, Matrix g, float eta, int rank, int num_procs) {
-    scalar_multiply_dot(g, eta, rank, num_procs);
-    subtract_dot(m, g, m, rank, num_procs);
+    scalar_multiply_mpi(g, eta, rank, num_procs);
+    subtract_mpi(m, g, m, rank, num_procs);
 }
 
 MLP_model train_mpi(Matrix X, Matrix Y, int hiddenSize, float eta, int batchSize, int epochs, int rank, int num_procs);

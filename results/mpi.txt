@@ -1,16 +1,16 @@
-YET TO BE IMPLEMENTED
+[1685453320.675256] [wn221:166285:0]        ib_iface.c:981  UCX  ERROR iface=0xf57da0: failed to create RC QP TX wr:256 sge:4 inl:64 resp:64 RX wr:0 sge:1 resp:64: Cannot allocate memory
+[1685453321.111904] [wn221:166287:0]        ib_iface.c:981  UCX  ERROR iface=0x1f10cc0: failed to create RC QP TX wr:256 sge:4 inl:64 resp:64 RX wr:0 sge:1 resp:64: Cannot allocate memory
+[1685453321.135892] [wn221:166286:0]        ib_iface.c:981  UCX  ERROR iface=0x1520d10: failed to create RC QP TX wr:256 sge:4 inl:64 resp:64 RX wr:0 sge:1 resp:64: Cannot allocate memory
+[1685453321.167492] [wn221:166289:0]        ib_iface.c:981  UCX  ERROR iface=0xbd2cd0: failed to create RC QP TX wr:256 sge:4 inl:64 resp:64 RX wr:0 sge:1 resp:64: Cannot allocate memory
 Training set used for testing
-Accuracy: 0.553948
+Accuracy: 0.181776
 
-YET TO BE IMPLEMENTED
 Training set used for testing
-Accuracy: 0.553948
+Accuracy: 0.181776
 
-YET TO BE IMPLEMENTED
 Training set used for testing
-Accuracy: 0.553948
+Accuracy: 0.181776
 
-YET TO BE IMPLEMENTED
 Training set used for testing
-Accuracy: 0.553948
+Accuracy: 0.181776
 
