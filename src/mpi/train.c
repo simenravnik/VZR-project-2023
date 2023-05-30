@@ -27,7 +27,10 @@ int main(int argc, char** argv) {
     // Prepare dataset
     TrainTestSplit split = prepare_dataset(FILEPATH, CLASSES, TRAIN_SIZE_PERCENTAGE);
 
+    double elapsed = omp_get_wtime();
     MLP_model model = train_mpi(split.X_train, split.Y_train, HIDDEN_SIZE, ETA, BATCH_SIZE, EPOCHS, rank, num_procs);
+    elapsed = omp_get_wtime() - elapsed;
+    printf("Time: %0.3f milliseconds \n", elapsed * 1000);
 
     // Test the model
     float accuracy;
