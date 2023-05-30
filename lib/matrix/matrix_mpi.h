@@ -72,37 +72,51 @@ void dot_mpi(Matrix mat1, Matrix mat2, Matrix product, int rank, int num_procs) 
 }
 
 void add_mpi(Matrix mat1, Matrix mat2, int rank, int num_procs) {
-    int elements_per_proc = mat1.rows * mat1.cols / num_procs;
-    int elements_remaining = mat1.rows * mat1.cols % num_procs;
-    int *send_counts = malloc(num_procs * sizeof(int));
-    int *displs = malloc(num_procs * sizeof(int));
+    int rows = mat1.rows;
+    int cols = mat1.cols;
 
-    // Calculate send_counts and displs for scattering the elements
+    int chunk_size = rows / num_procs;
+    int extra_rows = rows % num_procs;
+    int start_row = rank * chunk_size;
+    int end_row = start_row + chunk_size;
+
+    if (rank == num_procs - 1) {
+        // Distribute extra rows to the last process
+        end_row += extra_rows;
+    }
+
+    int* recvcounts = (int*)malloc(num_procs * sizeof(int));
+    int* displs = (int*)malloc(num_procs * sizeof(int));
+
     for (int i = 0; i < num_procs; i++) {
-        send_counts[i] = elements_per_proc;
-        if (i < elements_remaining) {
-            send_counts[i] += 1;
+        int chunk_start = i * chunk_size;
+        int chunk_end = chunk_start + chunk_size;
+        if (i == num_procs - 1) {
+            chunk_end += extra_rows;
         }
-        displs[i] = (i > 0) ? (displs[i - 1] + send_counts[i - 1]) : 0;
+        int chunk_rows = chunk_end - chunk_start;
+        recvcounts[i] = chunk_rows * cols;
+        displs[i] = chunk_start * cols;
     }
 
-    // Scatter elements of mat1 and mat2
-    float *local_mat1 = malloc(send_counts[rank] * sizeof(float));
-    float *local_mat2 = malloc(send_counts[rank] * sizeof(float));
-    MPI_Scatterv(mat1.data, send_counts, displs, MPI_FLOAT, local_mat1, send_counts[rank], MPI_FLOAT, MASTER, MPI_COMM_WORLD);
-    MPI_Scatterv(mat2.data, send_counts, displs, MPI_FLOAT, local_mat2, send_counts[rank], MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    // Scatter matrix data to all processes
+    MPI_Scatterv(mat1.data, recvcounts, displs, MPI_INT, mat1.data, recvcounts[rank], MPI_INT, MASTER, MPI_COMM_WORLD);
 
-    // Perform element-wise addition
-    for (int i = 0; i < send_counts[rank]; i++) {
-        local_mat1[i] = local_mat1[i] + local_mat2[i % mat1.cols];
+    // Broadcast matrix dimensions to all processes
+    MPI_Bcast(&rows, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+    MPI_Bcast(&cols, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+
+    // Perform matrix addition in parallel
+    for (int i = start_row; i < end_row; i++) {
+        for (int j = 0; j < cols; j++) {
+            mat1.data[i * cols + j] += mat2.data[j];
+        }
     }
 
-    // Gather the local results to the master process
-    MPI_Gatherv(local_mat1, send_counts[rank], MPI_FLOAT, mat1.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    // Gather modified matrix data to the master process
+    MPI_Gatherv(mat1.data, recvcounts[rank], MPI_INT, mat1.data, recvcounts, displs, MPI_INT, MASTER, MPI_COMM_WORLD);
 
-    free(local_mat1);
-    free(local_mat2);
-    free(send_counts);
+    free(recvcounts);
     free(displs);
 }
 
