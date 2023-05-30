@@ -12,13 +12,13 @@
 #include "../../lib/models/mlp_model.h"
 
 void mpi_compute_H(Matrix H, Matrix Xb, Matrix W1, Matrix b1, int rank, int num_procs) {
-    dot_serial(Xb, W1, H);
+    dot_mpi(Xb, W1, H, rank, num_procs);
     add_mpi(H, b1, rank, num_procs);
     matrix_tanh_dot(H, rank, num_procs);
 }
 
 void mpi_compute_Y_hat(Matrix Y_hat, Matrix H, Matrix W2, Matrix b2, int rank, int num_procs) {
-    dot_serial(H, W2, Y_hat);
+    dot_mpi(H, W2, Y_hat, rank, num_procs);
     add_mpi(Y_hat, b2, rank, num_procs);
     matrix_tanh_dot(Y_hat, rank, num_procs);
 }
@@ -35,7 +35,7 @@ void mpi_compute_delta_output(Matrix deltaOutput, Matrix E, Matrix Y_hat, Matrix
 
 void mpi_compute_W2g(Matrix W2g, Matrix H, Matrix H_tranpose, Matrix deltaOutput, int rank, int num_procs) {
     transpose_dot(H, H_tranpose, rank, num_procs);
-    dot_serial(H_tranpose, deltaOutput, W2g);
+    dot_mpi(H_tranpose, deltaOutput, W2g, rank, num_procs);
 }
 
 void mpi_compute_b2g(Matrix b2g, Matrix deltaOutput, int rank, int num_procs) {
@@ -44,7 +44,7 @@ void mpi_compute_b2g(Matrix b2g, Matrix deltaOutput, int rank, int num_procs) {
 
 void mpi_compute_He(Matrix He, Matrix deltaOutput, Matrix W2, Matrix W2_transpose, Matrix H, Matrix ones2_matrix, int rank, int num_procs) {
     transpose_dot(W2, W2_transpose, rank, num_procs);
-    dot_serial(deltaOutput, W2_transpose, He);
+    dot_mpi(deltaOutput, W2_transpose, He, rank, num_procs);
     square_dot(H, rank, num_procs);
     subtract_dot(ones2_matrix, H, H, rank, num_procs);
     hadamard_dot(He, H, He, rank, num_procs);
@@ -52,7 +52,7 @@ void mpi_compute_He(Matrix He, Matrix deltaOutput, Matrix W2, Matrix W2_transpos
 
 void mpi_compute_W1g(Matrix W1g, Matrix Xb, Matrix Xb_transpose, Matrix He, int rank, int num_procs) {
     transpose_dot(Xb, Xb_transpose, rank, num_procs);
-    dot_serial(Xb_transpose, He, W1g);
+    dot_mpi(Xb_transpose, He, W1g, rank, num_procs);
 }
 
 void mpi_compute_b1g(Matrix b1g, Matrix He, int rank, int num_procs) {
