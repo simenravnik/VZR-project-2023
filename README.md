@@ -99,3 +99,7 @@ function train_mlp(X, Y, hiddenSize, alpha, batchSize, epochs)
   return W1, b1,W2, b2
 end function
 ```
+
+## Results
+
+![Results](results/results.png)
