@@ -9,7 +9,7 @@
 #include "../../../lib/matrix/matrix_serial.h"
 #include "../../../lib/matrix/matrix_mpi.h"
 
-#define MASTER 0
+#define MASTER_TEST 1
 
 void test_mpi_dot(Matrix A, Matrix B, int rank, int num_procs) {
 
@@ -18,7 +18,7 @@ void test_mpi_dot(Matrix A, Matrix B, int rank, int num_procs) {
     Matrix product = allocate_matrix(C.rows, D.cols);
     dot_mpi(C, D, product, rank, num_procs);
 
-    if (rank == MASTER) {
+    if (rank == MASTER_TEST) {
 
         Matrix C_ref = duplicate_matrix(A);
         Matrix D_ref = duplicate_matrix(B);
@@ -49,7 +49,7 @@ void test_mpi_add(Matrix A, Matrix B, int rank, int num_procs) {
     Matrix D = duplicate_matrix(B);
     add_mpi(C, D, rank, num_procs);
 
-    if (rank == MASTER) {
+    if (rank == MASTER_TEST) {
 
         Matrix C_ref = duplicate_matrix(A);
         Matrix D_ref = duplicate_matrix(B);
@@ -78,7 +78,7 @@ void test_mpi_subtract(Matrix A, Matrix B, int rank, int num_procs) {
     Matrix difference = allocate_matrix(C.rows, C.cols);
     subtract_mpi(C, D, difference, rank, num_procs);
 
-    if (rank == MASTER) {
+    if (rank == MASTER_TEST) {
 
         Matrix C_ref = duplicate_matrix(A);
         Matrix D_ref = duplicate_matrix(B);
@@ -110,7 +110,7 @@ void test_mpi_hadamard(Matrix A, Matrix B, int rank, int num_procs) {
     Matrix product = allocate_matrix(C.rows, C.cols);
     hadamard_mpi(C, D, product, rank, num_procs);
 
-    if (rank == MASTER) {
+    if (rank == MASTER_TEST) {
 
         Matrix C_ref = duplicate_matrix(A);
         Matrix D_ref = duplicate_matrix(B);
@@ -141,7 +141,7 @@ void test_mpi_transpose(Matrix A, int rank, int num_procs) {
     Matrix trans = allocate_matrix(C.rows, C.cols);
     transpose_mpi(C, trans, rank, num_procs);
 
-    if (rank == MASTER) {
+    if (rank == MASTER_TEST) {
 
         Matrix C_ref = duplicate_matrix(A);
         Matrix trans_ref = allocate_matrix(C_ref.rows, C_ref.cols);
@@ -168,7 +168,7 @@ void test_mpi_sum(Matrix A, int rank, int num_procs) {
     Matrix sum_mat = allocate_matrix(1, A.cols);
     sum_mpi(A, sum_mat, rank, num_procs);
 
-    if (rank == MASTER) {
+    if (rank == MASTER_TEST) {
 
         Matrix sum_mat_ref = allocate_matrix(1, A.cols);
         
@@ -192,7 +192,7 @@ void test_mpi_square(Matrix A, int rank, int num_procs) {
     Matrix C = duplicate_matrix(A);
     square_mpi(C, rank, num_procs);
 
-    if (rank == MASTER) {
+    if (rank == MASTER_TEST) {
 
         Matrix C_ref = duplicate_matrix(A);        
         square_serial(C_ref);
@@ -215,7 +215,7 @@ void test_mpi_tanh(Matrix A, int rank, int num_procs) {
     Matrix C = duplicate_matrix(A);
     matrix_tanh_mpi(C, rank, num_procs);
 
-    if (rank == MASTER) {
+    if (rank == MASTER_TEST) {
 
         Matrix C_ref = duplicate_matrix(A);
         matrix_tanh_serial(C_ref);
@@ -238,7 +238,7 @@ void test_mpi_scalar_multiply(Matrix A, float scalar, int rank, int num_procs) {
     Matrix C = duplicate_matrix(A);
     scalar_multiply_mpi(C, scalar, rank, num_procs);
 
-    if (rank == MASTER) {
+    if (rank == MASTER_TEST) {
 
         Matrix C_ref = duplicate_matrix(A);
         

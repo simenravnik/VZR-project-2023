@@ -285,6 +285,7 @@ void sum_mpi(Matrix mat, Matrix sum, int rank, int num_procs) {
     }
 
     MPI_Gatherv(local_sum, sum_size, MPI_FLOAT, sum.data, recv_counts, displs_all, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    MPI_Bcast(sum.data, sum.rows * sum.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     // Free memory
     free(local_mat);
@@ -316,7 +317,7 @@ void square_mpi(Matrix mat, int rank, int num_procs) {
 
     // Scatter matrix data
     float* local_data = malloc(send_counts[rank] * sizeof(float));
-    MPI_Scatterv(mat.data, send_counts, displs, MPI_FLOAT, local_data, send_counts[rank], MPI_FLOAT, 0, MPI_COMM_WORLD);
+    MPI_Scatterv(mat.data, send_counts, displs, MPI_FLOAT, local_data, send_counts[rank], MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     // Square the local elements
     for (int i = 0; i < send_counts[rank]; i++) {
@@ -324,7 +325,7 @@ void square_mpi(Matrix mat, int rank, int num_procs) {
     }
 
     // Gather squared elements to the root process
-    MPI_Gatherv(local_data, send_counts[rank], MPI_FLOAT, mat.data, send_counts, displs, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    MPI_Gatherv(local_data, send_counts[rank], MPI_FLOAT, mat.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
     MPI_Bcast(mat.data, mat.rows * mat.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
     
     free(send_counts);
