@@ -69,6 +69,7 @@ void dot_mpi(Matrix mat1, Matrix mat2, Matrix product, int rank, int num_procs) 
 
     // Gather partial products to the master process
     MPI_Gatherv(local_product, local_rows * mat2.cols, MPI_FLOAT, product.data, gather_send_counts, gather_displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    MPI_Bcast(product.data, product.rows * product.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     free(local_mat1);
     free(local_product);
@@ -120,6 +121,7 @@ void add_mpi(Matrix mat1, Matrix mat2, int rank, int num_procs) {
 
     // Gather modified matrix data to the master process
     MPI_Gatherv(mat1.data, recvcounts[rank], MPI_INT, mat1.data, recvcounts, displs, MPI_INT, MASTER, MPI_COMM_WORLD);
+    MPI_Bcast(mat1.data, mat1.rows * mat1.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     free(recvcounts);
     free(displs);
@@ -154,6 +156,7 @@ void subtract_mpi(Matrix mat1, Matrix mat2, Matrix difference, int rank, int num
 
     // Gather the local differences to the master process
     MPI_Gatherv(local_difference, send_counts[rank], MPI_FLOAT, difference.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    MPI_Bcast(difference.data, difference.rows * difference.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     free(local_mat1);
     free(local_mat2);
@@ -191,6 +194,7 @@ void hadamard_mpi(Matrix mat1, Matrix mat2, Matrix product, int rank, int num_pr
 
     // Gather the local products to the master process
     MPI_Gatherv(local_product, send_counts[rank], MPI_FLOAT, product.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    MPI_Bcast(product.data, product.rows * product.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     free(local_mat1);
     free(local_mat2);
@@ -229,6 +233,7 @@ void transpose_mpi(Matrix mat, Matrix trans, int rank, int num_procs) {
 
     // Gather the local transpositions to the master process
     MPI_Gatherv(local_trans, send_counts[rank], MPI_FLOAT, trans.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    MPI_Bcast(trans.data, trans.rows * trans.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     free(local_mat);
     free(local_trans);
@@ -302,7 +307,8 @@ void square_mpi(Matrix mat, int rank, int num_procs) {
 
     // Gather squared elements to the root process
     MPI_Gatherv(local_data, send_counts[rank], MPI_FLOAT, mat.data, send_counts, displs, MPI_FLOAT, 0, MPI_COMM_WORLD);
-
+    MPI_Bcast(mat.data, mat.rows * mat.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    
     free(send_counts);
     free(displs);
     free(local_data);
@@ -334,6 +340,7 @@ void matrix_tanh_mpi(Matrix mat, int rank, int num_procs) {
 
     // Gather the local results to the master process
     MPI_Gatherv(local_mat, send_counts[rank], MPI_FLOAT, mat.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    MPI_Bcast(mat.data, mat.rows * mat.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     free(local_mat);
     free(send_counts);
@@ -366,6 +373,7 @@ void scalar_multiply_mpi(Matrix mat, float scalar, int rank, int num_procs) {
 
     // Gather the local results to the master process
     MPI_Gatherv(local_mat, send_counts[rank], MPI_FLOAT, mat.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    MPI_Bcast(mat.data, mat.rows * mat.cols, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
     free(local_mat);
     free(send_counts);
