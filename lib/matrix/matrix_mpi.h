@@ -242,41 +242,59 @@ void transpose_mpi(Matrix mat, Matrix trans, int rank, int num_procs) {
 }
 
 void sum_mpi(Matrix mat, Matrix sum, int rank, int num_procs) {
-    int cols_per_proc = mat.cols / num_procs;
-    int cols_remaining = mat.cols % num_procs;
+
+    Matrix trans = allocate_matrix(mat.cols, mat.rows);
+    transpose_serial(mat, trans);   // Fix this
+
+    int elements_per_proc = trans.rows / num_procs;
+    int elements_remaining = trans.rows % num_procs;
     int *send_counts = malloc(num_procs * sizeof(int));
     int *displs = malloc(num_procs * sizeof(int));
 
-    // Calculate send_counts and displs for scattering the columns
+    // Calculate send_counts and displs for scattering the rows of mat1
     for (int i = 0; i < num_procs; i++) {
-        send_counts[i] = cols_per_proc;
-        if (i < cols_remaining) {
-            send_counts[i] += 1;
+        send_counts[i] = elements_per_proc * trans.cols;
+        if (i < elements_remaining) {
+            send_counts[i] += trans.cols;
         }
         displs[i] = (i > 0) ? (displs[i - 1] + send_counts[i - 1]) : 0;
     }
 
-    // Scatter columns of mat
-    float *local_mat = malloc(mat.rows * send_counts[rank] * sizeof(float));
-    float *local_sum = malloc(send_counts[rank] * sizeof(float));
-    MPI_Scatterv(mat.data, send_counts, displs, MPI_FLOAT, local_mat, mat.rows * send_counts[rank], MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    float *local_mat = malloc(send_counts[rank] * sizeof(float));
+    MPI_Scatterv(trans.data, send_counts, displs, MPI_FLOAT, local_mat, send_counts[rank], MPI_FLOAT, MASTER, MPI_COMM_WORLD);
 
-    // Calculate local column sums
+    // Calculate local sum
+    int sum_size = send_counts[rank] / trans.cols;
+    float *local_sum = calloc(sum_size, sizeof(float));
     for (int i = 0; i < send_counts[rank]; i++) {
-        double colSum = 0;
-        for (int j = 0; j < mat.rows; j++) {
-            colSum += local_mat[j * send_counts[rank] + i];
-        }
-        local_sum[i] = (float)colSum;
+        local_sum[i / trans.cols] += local_mat[i];
     }
 
-    // Gather the local column sums to the master process
-    MPI_Gatherv(local_sum, send_counts[rank], MPI_FLOAT, sum.data, send_counts, displs, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+    // Gather the local sums to the master node
+    int *recv_counts = NULL;
+    int *displs_all = NULL;
 
+    if (rank == MASTER) {
+        recv_counts = malloc(num_procs * sizeof(int));
+        displs_all = malloc(num_procs * sizeof(int));
+        // Calculate recv_counts and displs_all for gathering the local sums
+        for (int i = 0; i < num_procs; i++) {
+            recv_counts[i] = send_counts[i] / trans.cols;
+            displs_all[i] = (i > 0) ? (displs_all[i - 1] + recv_counts[i - 1]) : 0;
+        }
+    }
+
+    MPI_Gatherv(local_sum, sum_size, MPI_FLOAT, sum.data, recv_counts, displs_all, MPI_FLOAT, MASTER, MPI_COMM_WORLD);
+
+    // Free memory
     free(local_mat);
     free(local_sum);
     free(send_counts);
     free(displs);
+    if (rank == MASTER) {
+        free(recv_counts);
+        free(displs_all);
+    }
 }
 
 void square_mpi(Matrix mat, int rank, int num_procs) {

@@ -165,16 +165,14 @@ void test_mpi_transpose(Matrix A, int rank, int num_procs) {
 
 void test_mpi_sum(Matrix A, int rank, int num_procs) {
 
-    Matrix C = duplicate_matrix(A);
-    Matrix sum_mat = allocate_matrix(C.rows, C.cols);
-    sum_mpi(C, sum_mat, rank, num_procs);
+    Matrix sum_mat = allocate_matrix(1, A.cols);
+    sum_mpi(A, sum_mat, rank, num_procs);
 
     if (rank == MASTER) {
 
-        Matrix C_ref = duplicate_matrix(A);
-        Matrix sum_mat_ref = allocate_matrix(C_ref.rows, C_ref.cols);
+        Matrix sum_mat_ref = allocate_matrix(1, A.cols);
         
-        sum_serial(C_ref, sum_mat_ref);
+        sum_serial(A, sum_mat_ref);
 
         int error = compare_matrices(sum_mat, sum_mat_ref);
 
@@ -184,10 +182,8 @@ void test_mpi_sum(Matrix A, int rank, int num_procs) {
             print_passed("MPI Sum Test");
         }
 
-        free(C_ref.data);
         free(sum_mat_ref.data);
     }
-    free(C.data);
     free(sum_mat.data);
 }
 
